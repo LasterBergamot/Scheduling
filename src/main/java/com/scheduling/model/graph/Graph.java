@@ -1,4 +1,4 @@
-package com.scheduling.graph;
+package com.scheduling.model.graph;
 
 import java.util.HashMap;
 import java.util.LinkedList;

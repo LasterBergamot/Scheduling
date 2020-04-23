@@ -1,6 +1,6 @@
 package com.scheduling;
 
-import com.scheduling.graph.Graph;
+import com.scheduling.model.graph.Graph;
 
 public class Main {
 
