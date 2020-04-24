@@ -10,6 +10,11 @@ import java.util.Set;
 
 public class SchedulingService {
 
+    // Get the services from the Járatok sheet, these come with the departure- and arrival stations, and create a List of BusServices
+    // Create a Timeline for each station (Vá.1 and Vá.2)
+    // In these Timelines set the departure- and arrival nodes according to the departure- and arrival times and stations found inside the BusService
+
+    // All of the nodes from the stations
     Set<Node> N;
 
     // Ud
