@@ -7,6 +7,7 @@ import java.time.LocalTime;
 public class Node extends ClassWithID {
 
     private NodeType nodeType;
+
     private LocalTime localTime;
 
     public Node() {
