@@ -1,11 +1,13 @@
-package com.scheduling.model.busservice;
+package com.scheduling.model.vehicleservice;
+
+import com.scheduling.model.util.ClassWithID;
 
 import java.time.LocalTime;
 
 /**
  * Járatok sheet in Input_VSP.xlsx
  */
-public class BusService {
+public class VehicleService extends ClassWithID {
 
     // Column A
     private LocalTime departureTime;
@@ -18,4 +20,8 @@ public class BusService {
 
     // Column D
     private int arrivalStationID;
+
+    public VehicleService() {
+        this.id = ID_COUNTER.getAndIncrement();
+    }
 }
