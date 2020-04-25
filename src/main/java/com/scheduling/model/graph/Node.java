@@ -1,4 +1,10 @@
 package com.scheduling.model.graph;
 
-public class Node {
+import com.scheduling.model.util.ClassWithID;
+
+public class Node extends ClassWithID {
+
+    public Node() {
+        this.id = ID_COUNTER.getAndIncrement();
+    }
 }
