@@ -1,6 +1,6 @@
 package com.scheduling.model.station;
 
-import com.scheduling.model.graph.Node;
+import com.scheduling.model.graph.node.Node;
 
 import java.util.List;
 

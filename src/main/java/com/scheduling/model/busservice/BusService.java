@@ -1,7 +1,5 @@
 package com.scheduling.model.busservice;
 
-import com.scheduling.model.station.Station;
-
 import java.time.LocalTime;
 
 /**
@@ -9,8 +7,15 @@ import java.time.LocalTime;
  */
 public class BusService {
 
+    // Column A
     private LocalTime departureTime;
+
+    // Column B
     private LocalTime arrivalTime;
-    private Station departureStation;
-    private Station arrivalStation;
+
+    // Column C
+    private int departureStationID;
+
+    // Column D
+    private int arrivalStationID;
 }

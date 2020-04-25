@@ -1,7 +1,5 @@
 package com.scheduling.model.route;
 
-import com.scheduling.model.station.Station;
-
 /**
  * Paraméterek sheet in Input_VSP.xlsx
  */
@@ -11,10 +9,10 @@ public class Route {
     private String routeName;
 
     // From column B
-    private Station departureStation;
+    private int departureStationID;
 
     // From column B
-    private Station arrivalStation;
+    private int arrivalStationID;
 
     // Column C
     private RouteType routeType;
