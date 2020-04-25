@@ -1,7 +1,7 @@
 package com.scheduling.service;
 
-import com.scheduling.model.graph.BusService;
-import com.scheduling.model.graph.Depot;
+import com.scheduling.model.busservice.BusService;
+import com.scheduling.model.depot.Depot;
 import com.scheduling.model.graph.Edge;
 import com.scheduling.model.graph.Node;
 

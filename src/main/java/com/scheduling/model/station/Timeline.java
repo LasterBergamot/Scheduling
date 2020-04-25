@@ -1,4 +1,6 @@
-package com.scheduling.model.graph;
+package com.scheduling.model.station;
+
+import com.scheduling.model.graph.Node;
 
 import java.util.List;
 

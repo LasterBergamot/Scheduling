@@ -1,9 +1,11 @@
-package com.scheduling.model.graph;
+package com.scheduling.model.busservice;
+
+import com.scheduling.model.station.Station;
 
 import java.time.LocalTime;
 
 /**
- * Jaratok sheet in Input_VSP.xlsx
+ * Járatok sheet in Input_VSP.xlsx
  */
 public class BusService {
 
