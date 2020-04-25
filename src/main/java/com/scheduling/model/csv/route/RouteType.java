@@ -1,4 +1,4 @@
-package com.scheduling.model.route;
+package com.scheduling.model.csv.route;
 
 public enum RouteType {
 

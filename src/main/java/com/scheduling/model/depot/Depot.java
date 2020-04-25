@@ -11,7 +11,6 @@ public class Depot extends ClassWithID {
     // The ID of the station where this depot is used
     private int stationId;
 
-   // Inside this: departure- and arrivalNodes for this Depot, so basically one for each type
     private Timeline timeline;
 
     public Depot() {

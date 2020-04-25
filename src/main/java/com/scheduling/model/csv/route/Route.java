@@ -1,7 +1,9 @@
-package com.scheduling.model.route;
+package com.scheduling.model.csv.route;
 
 /**
  * Paraméterek sheet in Input_VSP.xlsx
+ *
+ * Object for storing data.
  */
 public class Route {
 

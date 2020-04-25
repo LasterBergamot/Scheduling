@@ -1,6 +1,6 @@
 package com.scheduling.service;
 
-import com.scheduling.model.vehicleservice.VehicleService;
+import com.scheduling.model.csv.vehicleservice.VehicleService;
 import com.scheduling.model.depot.Depot;
 import com.scheduling.model.graph.edge.Edge;
 import com.scheduling.model.graph.node.Node;
@@ -21,10 +21,12 @@ public class SchedulingService {
 
     // Depot + vehicle service connection:
     // The vehicle departs from the depot: (G-type routes)
+    //      Subtract the menettartam from the departureTime -> departureTime for this depot
     //      check in which depot-interval (timeOfTheDay) this time fits in (departureTime from VehicleService), inside routes/depots
     //          -> get the duration (menettartam)
     //      this will be the weight of the edge
     //      (this is the time required for the vehicle to reach the departure station)
+    //      Set this departure time inside the Depot
     // After the vehicle reached the departure station, it departs to the arrival station: (N-type routes)
     //      check in which timeOfTheDay this time fits in (departureTime from VehicleService), inside routes
     //          -> get the technical- and compensatoryTime and add it to the difference between departure- and arrivalTime (basically the duration, but not the duration from Route)
@@ -34,6 +36,8 @@ public class SchedulingService {
     //      check in which depot-interval (timeOfTheDay) this time fits in (departureTime from VehicleService), inside routes/depots
     //          -> get the duration (menettartam)
     //      this will be the weight of the edge
+    //      Set this arrival time inside the Depot
+    //      Add the menettartam to the arrivalTime -> arrivalTime for this depot
     //      (this is the time required for the vehicle to reach the departure station)
 
     // Du from D: create a set of depots for a u vehicle service. All of the depots which can be served by the u vehicle service.
@@ -47,7 +51,32 @@ public class SchedulingService {
     // Create a Timeline for each station (Vá.1 and Vá.2)
     // In these Timelines set the departure- and arrival nodes according to the departure- and arrival times and stations found inside the VehicleService
 
+    // N: all departure- and arrival times (nodes) from the stations
+    Set<Node> N;
+
+    // Ed from D: Ud is required. Edges of the network.
+    // Integer: ID of depot
+    Map<Integer, Set<Edge>> Ed;
+
+    // Bd from D: two phase merging strategy
+
+    // Rd from D: Ud is required. Departing- and arriving edges.
+    // Firstly: get the departing edge
+    // Secondly: get the arriving edge
+    // Put them into the set
+    // Integer: ID of depot
+    Map<Integer, Set<Edge>> Rd;
+
+    // Kd from D:
+    // Integer: ID of depot
+    Map<Integer, Set<Edge>> Kd;
 
     // Wd: Create waiting edges for each depot: these always follow the current station's timeline and they connect the following departure times, collecting their stream
 
+    // Ad from D: all of the edges for the given depot. Union of Ed, Bd, Rd, Kd and Wd.
+    // Integer: ID of depot
+    Map<Integer, Set<Edge>> Ad;
+
+    // E: all of the edges of the graph. Union of all Ads.
+    Set<Edge> E;
 }
