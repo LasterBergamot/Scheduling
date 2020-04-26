@@ -1,14 +1,12 @@
 package com.scheduling;
 
-import com.scheduling.model.graph.Graph;
 import com.scheduling.service.SchedulingService;
 
 public class Main {
 
     public static void main(String[] args) {
 
-        new SchedulingService().readCSV();
-//        new SchedulingService().schedule();
+        new SchedulingService().schedule();
 //
 //        // Object of graph is created.
 //        Graph<Integer> graph = new Graph<>();

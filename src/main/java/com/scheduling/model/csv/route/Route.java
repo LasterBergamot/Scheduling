@@ -10,11 +10,11 @@ public class Route {
     // Column A
     private String routeName;
 
-    // From column B
-    private int departureStationID ;
+    // From column B: default value is 0 == unused
+    private int departureStationID = 0;
 
-    // From column B
-    private int arrivalStationID;
+    // From column B: default value is 0 == unused
+    private int arrivalStationID = 0;
 
     // Column C
     private RouteType routeType;
@@ -32,10 +32,11 @@ public class Route {
     // Column K
     private int compensatoryTime;
 
-    public Route(String routeName, int departureStationID, int arrivalStationID, RouteType routeType, TimeOfTheDay timeOfTheDay, int duration, int technicalTime, int compensatoryTime) {
+    // The ID of the depot: default value is 0 == unused
+    private int depotID = 0;
+
+    public Route(String routeName, RouteType routeType, TimeOfTheDay timeOfTheDay, int duration, int technicalTime, int compensatoryTime) {
         this.routeName = routeName;
-        this.departureStationID = departureStationID;
-        this.arrivalStationID = arrivalStationID;
         this.routeType = routeType;
         this.timeOfTheDay = timeOfTheDay;
         this.duration = duration;
@@ -105,5 +106,28 @@ public class Route {
 
     public void setCompensatoryTime(int compensatoryTime) {
         this.compensatoryTime = compensatoryTime;
+    }
+
+    public int getDepotID() {
+        return depotID;
+    }
+
+    public void setDepotID(int depotID) {
+        this.depotID = depotID;
+    }
+
+    @Override
+    public String toString() {
+        return "Route{" +
+                "routeName='" + routeName + '\'' +
+                ", departureStationID=" + departureStationID +
+                ", arrivalStationID=" + arrivalStationID +
+                ", routeType=" + routeType +
+                ", timeOfTheDay=" + timeOfTheDay +
+                ", duration=" + duration +
+                ", technicalTime=" + technicalTime +
+                ", compensatoryTime=" + compensatoryTime +
+                ", depotID=" + depotID +
+                '}';
     }
 }

@@ -14,6 +14,8 @@ public class TerminalStation extends ClassWithID {
     }
 
     public TerminalStation(String stationName) {
+        this.id = ID_COUNTER.getAndIncrement();
+
         this.stationName = stationName;
     }
 

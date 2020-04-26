@@ -1,6 +1,8 @@
 package com.scheduling.service;
 
 import com.scheduling.model.csv.route.Route;
+import com.scheduling.model.csv.route.RouteType;
+import com.scheduling.model.csv.route.TimeOfTheDay;
 import com.scheduling.model.csv.vehicleservice.VehicleService;
 import com.scheduling.model.depot.Depot;
 import com.scheduling.model.graph.edge.Edge;
@@ -8,25 +10,39 @@ import com.scheduling.model.graph.node.Node;
 import com.scheduling.model.station.TerminalStation;
 import org.apache.poi.ss.usermodel.*;
 
-import java.io.FileInputStream;
-import java.io.FileNotFoundException;
-import java.io.IOException;
-import java.io.InputStream;
+import java.io.*;
+import java.nio.charset.Charset;
 import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.text.SimpleDateFormat;
+import java.time.LocalTime;
 import java.util.*;
 
 public class SchedulingService {
 
     private static final String PATH_INPUT_VSP_XLSX = "D:\\Input_VSP.xlsx";
+    private static final String PATH_PARAMETEREK_CSV = "D:\\Parameterek.csv";
+
+    private static final String ENCODING_ISO_8859_2 = "ISO-8859-2";
+    private static final String CSV_DELIMITER = ",";
+
+    private static final String NAME_TERMINAL_STATION_1 = "TerminalStation1";
+    private static final String NAME_TERMINAL_STATION_2 = "TerminalStation2";
+
+    private static final String FROM_TO_VA_2_FELE = "Vá.2 felé";
+    private static final String FROM_TO_VA_1_FELE = "Vá.1 felé";
+
+    private static final String FROM_TO_GARAZS_VA_1 = "Garázs - Vá.1";
+    private static final String FROM_TO_VA_1_GARAZS = "Vá.1 - Garázs";
+    private static final String FROM_TO_GARAZS_VA_2 = "Garázs - Vá.2";
+    private static final String FROM_TO_VA_2_GARAZS = "Vá.2 - Garázs";
 
     public void schedule() {
         System.out.println("Starting to create the proper scheduling.\n");
 
         // Create the stations: Vá.1 and Vá.2 with their name
         System.out.println("Creating stations.");
-        List<TerminalStation> terminalStations = Arrays.asList(new TerminalStation("TerminalStation1"), new TerminalStation("TerminalStation2"));
+        List<TerminalStation> terminalStations = Arrays.asList(new TerminalStation(NAME_TERMINAL_STATION_1), new TerminalStation(NAME_TERMINAL_STATION_2));
         System.out.println("Creating stations - DONE.");
 
         // There's only one depot, which can serve all of the services
@@ -34,7 +50,9 @@ public class SchedulingService {
         Depot depot = new Depot();
         System.out.println("Creating depot - DONE.");
 
-        List<Route> routes = getRoutesFromTheCSV();
+        List<Route> routes = getRoutesFromTheCSV(terminalStations, depot);
+
+        routes.forEach(System.out::println);
 
         Set<VehicleService> vehicleServices = getVehicleServicesFromTheCSV();
 
@@ -67,9 +85,92 @@ public class SchedulingService {
      *
      * @return an ArrayList of Routes
      */
-    private List<Route> getRoutesFromTheCSV() {
+    private List<Route> getRoutesFromTheCSV(List<TerminalStation> terminalStations, Depot depot) {
         System.out.println("Getting the Routes from the CSV.");
         List<Route> routes = new ArrayList<>();
+
+        int terminalStation1ID = terminalStations.get(0).getId();
+        int terminalStation2ID = terminalStations.get(1).getId();
+        int depotID = depot.getId();
+
+        Map<String, Integer> departureFromTos = Map.of(
+                FROM_TO_VA_2_FELE, terminalStation1ID,
+                FROM_TO_VA_1_FELE, terminalStation2ID,
+                FROM_TO_GARAZS_VA_1, depotID,
+                FROM_TO_VA_1_GARAZS, terminalStation1ID,
+                FROM_TO_GARAZS_VA_2, depotID,
+                FROM_TO_VA_2_GARAZS, terminalStation2ID
+        );
+
+        Map<String, Integer> arrivalFromTos = Map.of(
+                FROM_TO_VA_2_FELE, terminalStation2ID,
+                FROM_TO_VA_1_FELE, terminalStation1ID,
+                FROM_TO_GARAZS_VA_1, terminalStation1ID,
+                FROM_TO_VA_1_GARAZS, depotID,
+                FROM_TO_GARAZS_VA_2, terminalStation2ID,
+                FROM_TO_VA_2_GARAZS, depotID
+        );
+
+        // Source: https://mkyong.com/java/how-to-read-and-parse-csv-file-in-java/
+        BufferedReader br = null;
+        String line;
+
+        try {
+
+            br = new BufferedReader(new FileReader(PATH_PARAMETEREK_CSV, Charset.forName(ENCODING_ISO_8859_2)));
+            while ((line = br.readLine()) != null) {
+                String[] routeFromCSV = line.split(CSV_DELIMITER);
+
+                String routeNameFromCSV = routeFromCSV[0];
+                String fromToFromCSV = routeFromCSV[1];
+                String routeTypeFromCSV = routeFromCSV[2];
+                String startTimeOfTheDayFromCSV = routeFromCSV[3];
+                String finishTimeOfTheDayFromCSV = routeFromCSV[4];
+                String durationFromCSV = routeFromCSV[5];
+                String technicalTimeFromCSV = routeFromCSV[6];
+                String compensatoryTimeFromCSV = routeFromCSV[7];
+
+                RouteType routeType= RouteType.valueOf(routeTypeFromCSV);
+
+                LocalTime startTimeOfTheDay = LocalTime.parse(startTimeOfTheDayFromCSV);
+                LocalTime finishTimeOfTheDay = LocalTime.parse(finishTimeOfTheDayFromCSV);
+                TimeOfTheDay timeOfTheDay = new TimeOfTheDay(startTimeOfTheDay, finishTimeOfTheDay);
+
+                int duration = (int) Float.parseFloat(durationFromCSV);
+                int technicalTime = (int) Float.parseFloat(technicalTimeFromCSV);
+                int compensatoryTime = (int) Float.parseFloat(compensatoryTimeFromCSV);
+
+                Route route = new Route(routeNameFromCSV, routeType, timeOfTheDay, duration, technicalTime, compensatoryTime);
+
+                if (routeType == RouteType.N) {
+                    route.setDepartureStationID(departureFromTos.get(fromToFromCSV));
+                    route.setArrivalStationID(arrivalFromTos.get(fromToFromCSV));
+                } else {
+                    String trimmedFromToFromCSV = fromToFromCSV.trim();
+
+                    if (FROM_TO_GARAZS_VA_1.equals(trimmedFromToFromCSV) || FROM_TO_GARAZS_VA_2.equals(trimmedFromToFromCSV)) {
+                        route.setDepotID(departureFromTos.get(trimmedFromToFromCSV));
+                        route.setArrivalStationID(arrivalFromTos.get(trimmedFromToFromCSV));
+                    } else {
+                        route.setDepartureStationID(departureFromTos.get(trimmedFromToFromCSV));
+                        route.setDepotID(arrivalFromTos.get(trimmedFromToFromCSV));
+                    }
+                }
+
+                routes.add(route);
+            }
+
+        } catch (IOException e) {
+            e.printStackTrace();
+        } finally {
+            if (br != null) {
+                try {
+                    br.close();
+                } catch (IOException e) {
+                    e.printStackTrace();
+                }
+            }
+        }
 
         System.out.println("Getting the Routes from the CSV - DONE.");
         return routes;
@@ -322,14 +423,14 @@ public class SchedulingService {
                     }
 
                     if (cellIterator.hasNext()) {
-                        stringBuilder.append(",");
+                        stringBuilder.append(CSV_DELIMITER);
                     }
                 }
 
                 stringBuilder.append('\n');
             }
 
-            Files.write(Paths.get("D:\\" + sheetName + ".csv"), stringBuilder.toString().getBytes("ISO-8859-2"));
+            Files.write(Paths.get("D:\\" + sheetName + ".csv"), stringBuilder.toString().getBytes(ENCODING_ISO_8859_2));
         } catch (IOException e) {
             e.printStackTrace();
         }
