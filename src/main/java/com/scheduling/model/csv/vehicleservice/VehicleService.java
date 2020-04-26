@@ -27,6 +27,13 @@ public class VehicleService extends ClassWithID {
         this.id = ID_COUNTER.getAndIncrement();
     }
 
+    public VehicleService(LocalTime departureTime, LocalTime arrivalTime) {
+        this.id = ID_COUNTER.getAndIncrement();
+
+        this.departureTime = departureTime;
+        this.arrivalTime = arrivalTime;
+    }
+
     public VehicleService(LocalTime departureTime, LocalTime arrivalTime, int departureStationID, int arrivalStationID) {
         this.id = ID_COUNTER.getAndIncrement();
 
@@ -66,5 +73,16 @@ public class VehicleService extends ClassWithID {
 
     public void setArrivalStationID(int arrivalStationID) {
         this.arrivalStationID = arrivalStationID;
+    }
+
+    @Override
+    public String toString() {
+        return "VehicleService{" +
+                "departureTime=" + departureTime +
+                ", arrivalTime=" + arrivalTime +
+                ", departureStationID=" + departureStationID +
+                ", arrivalStationID=" + arrivalStationID +
+                ", id=" + id +
+                '}';
     }
 }
