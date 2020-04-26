@@ -7,47 +7,49 @@ import com.scheduling.model.graph.edge.Edge;
 import com.scheduling.model.graph.node.Node;
 import com.scheduling.model.station.TerminalStation;
 
-import java.util.ArrayList;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Set;
+import java.util.*;
 
 public class SchedulingService {
 
     public void schedule() {
-        System.out.println("Starting to create the proper scheduling...");
+        System.out.println("Starting to create the proper scheduling.\n");
 
         // Create the stations: Vá.1 and Vá.2 with their name
-        TerminalStation terminalStation1;
-        TerminalStation terminalStation2;
+        System.out.println("Creating stations.");
+        List<TerminalStation> terminalStations = Arrays.asList(new TerminalStation("TerminalStation1"), new TerminalStation("TerminalStation2"));
+        System.out.println("Creating stations - DONE.");
 
         // There's only one depot, which can serve all of the services
-        Depot depot;
+        System.out.println("Creating depot.");
+        Depot depot = new Depot();
+        System.out.println("Creating depot - DONE.");
 
         List<Route> routes = getRoutesFromTheCSV();
 
         Set<VehicleService> vehicleServices = getVehicleServicesFromTheCSV();
 
-        // Create a Timeline for each terminal station (Vá.1 and Vá.2)
-        // In these Timelines set the departure- and arrival nodes according to the departure- and arrival times and stations found inside the VehicleService
+        createTimelinesForAllOfTheTerminalStations(terminalStations, vehicleServices);
 
+        createTheTimelineForTheDepot(depot, vehicleServices, routes);
 
-        Set<Node> N = createN();
+        Set<Node> N = createN(terminalStations);
 
-        Set<Edge> E = createE();
+        Set<Edge> E = createE(vehicleServices, routes);
 
-        Set<Edge> B = createB();
+        Set<Edge> B = createB(terminalStations, vehicleServices);
 
-        Set<Edge> R = createR();
+        Set<Edge> R = createR(depot, vehicleServices);
 
-        Set<Edge> K = createK();
+        Set<Edge> K = createK(depot);
 
-        Set<Edge> W = createW();
+        Set<Edge> W = createW(terminalStations);
 
         Set<Edge> A = createA(E, B, R, K, W);
 
         // E: all of the edges of the graph. Union of all Ads.
         Set<Edge> allOfTheEdgesOfTheGraph;
+
+        System.out.println("\nDone with creating a proper scheduling.");
     }
 
     /**
@@ -56,8 +58,10 @@ public class SchedulingService {
      * @return an ArrayList of Routes
      */
     private List<Route> getRoutesFromTheCSV() {
+        System.out.println("Getting the Routes from the CSV.");
         List<Route> routes = new ArrayList<>();
 
+        System.out.println("Getting the Routes from the CSV - DONE.");
         return routes;
     }
 
@@ -69,9 +73,30 @@ public class SchedulingService {
      * @return a HashSet of VehicleServices
      */
     private Set<VehicleService> getVehicleServicesFromTheCSV() {
+        System.out.println("Getting the Vehicle Services from the CSV.");
         Set<VehicleService> vehicleServices = new HashSet<>();
 
+        System.out.println("Getting the Vehicle Services from the CSV - DONE.");
         return vehicleServices;
+    }
+
+    /**
+     * Create a Timeline for each terminal station (Vá.1 and Vá.2)
+     * In these Timelines set the departure- and arrival nodes according to the departure- and arrival times and stations found inside the VehicleService
+     *
+     * @param terminalStations - all of the Terminal Stations
+     * @param vehicleServices - all of the Vehicle Services
+     */
+    private void createTimelinesForAllOfTheTerminalStations(List<TerminalStation> terminalStations, Set<VehicleService> vehicleServices) {
+        System.out.println("Creating Timelines for all of the Terminal Stations.");
+
+        System.out.println("Creating Timelines for all of the Terminal Stations - DONE.");
+    }
+
+    private void createTheTimelineForTheDepot(Depot depot, Set<VehicleService> vehicleServices, List<Route> routes) {
+        System.out.println("Creating the Timeline for the depot.");
+
+        System.out.println("Creating the Timeline for the depot - DONE.");
     }
 
     /**
@@ -79,9 +104,11 @@ public class SchedulingService {
      *
      * @return a HashSet containing all of the nodes of the network
      */
-    private Set<Node> createN() {
+    private Set<Node> createN(List<TerminalStation> terminalStations) {
+        System.out.println("Creating N.");
         Set<Node> allOfTheNodesOfTheNetwork = new HashSet<>();
 
+        System.out.println("Creating N - DONE.");
         return allOfTheNodesOfTheNetwork;
     }
 
@@ -100,9 +127,11 @@ public class SchedulingService {
      *
      * @return a HashSet containing all of the edges for scheduled services
      */
-    private Set<Edge> createE() {
+    private Set<Edge> createE(Set<VehicleService> vehicleServices, List<Route> routes) {
+        System.out.println("Creating E.");
         Set<Edge> edgesForScheduledServices = new HashSet<>();
 
+        System.out.println("Creating E - DONE.");
         return edgesForScheduledServices;
     }
 
@@ -111,9 +140,11 @@ public class SchedulingService {
      *  EdgeType: OVERHEAD
      * @return a HashSet with all of the overhead edges of the graph
      */
-    private Set<Edge> createB() {
+    private Set<Edge> createB(List<TerminalStation> terminalStations, Set<VehicleService> vehicleServices) {
+        System.out.println("Creating B.");
         Set<Edge> edgesForOverheadServices = new HashSet<>();
 
+        System.out.println("Creating B - DONE.");
         return edgesForOverheadServices;
     }
 
@@ -152,9 +183,11 @@ public class SchedulingService {
      *
      * @return a HashSet containing all of the depot departing- and arriving edges
      */
-    private Set<Edge> createR() {
+    private Set<Edge> createR(Depot depot, Set<VehicleService> vehicleServices) {
+        System.out.println("Creating R.");
         Set<Edge> depotDepartingAndArrivingEdges = new HashSet<>();
 
+        System.out.println("Creating R - DONE.");
         return depotDepartingAndArrivingEdges;
     }
 
@@ -165,14 +198,16 @@ public class SchedulingService {
      *
      * @return a HashSet with all of the circular flow edges between depot arriving- and departing nodes
      */
-    private Set<Edge> createK() {
+    private Set<Edge> createK(Depot depot) {
+        System.out.println("Creating K.");
         Set<Edge> depotCircularFlowEdges = new HashSet<>();
 
+        System.out.println("Creating K - DONE.");
         return depotCircularFlowEdges;
     }
 
     /**
-     * Wd: Create waiting edges for each depot: these always follow the current station's timeline and they connect the following departure times, collecting their stream
+     * Wd: Create waiting edges: these always follow the current station's timeline and they connect the following departure times, collecting their stream
      * Iterate over the two terminal stations
      * Iterate over the departureTimes found inside the terminal station
      * Get the difference between these times (check if it's the first node on the Timeline)
@@ -182,9 +217,11 @@ public class SchedulingService {
      *
      * @return a HashSet containing the waiting edges for each station
      */
-    private Set<Edge> createW() {
+    private Set<Edge> createW(List<TerminalStation> terminalStations) {
+        System.out.println("Creating W.");
         Set<Edge> waitingEdgesForTheTerminalStations = new HashSet<>();
 
+        System.out.println("Creating W - DONE.");
         return waitingEdgesForTheTerminalStations;
     }
 
@@ -201,6 +238,7 @@ public class SchedulingService {
      * @return a HashSet containing all of the edges of the network
      */
     private Set<Edge> createA(Set<Edge> E, Set<Edge> B, Set<Edge> R, Set<Edge> K, Set<Edge> W) {
+        System.out.println("Creating A.");
         Set<Edge> allOfTheEdgesOfTheNetwork = new HashSet<>();
 
         allOfTheEdgesOfTheNetwork.addAll(E);
@@ -209,6 +247,7 @@ public class SchedulingService {
         allOfTheEdgesOfTheNetwork.addAll(K);
         allOfTheEdgesOfTheNetwork.addAll(W);
 
+        System.out.println("Creating A - DONE.");
         return allOfTheEdgesOfTheNetwork;
     }
 }
