@@ -26,4 +26,45 @@ public class VehicleService extends ClassWithID {
     public VehicleService() {
         this.id = ID_COUNTER.getAndIncrement();
     }
+
+    public VehicleService(LocalTime departureTime, LocalTime arrivalTime, int departureStationID, int arrivalStationID) {
+        this.id = ID_COUNTER.getAndIncrement();
+
+        this.departureTime = departureTime;
+        this.arrivalTime = arrivalTime;
+        this.departureStationID = departureStationID;
+        this.arrivalStationID = arrivalStationID;
+    }
+
+    public LocalTime getDepartureTime() {
+        return departureTime;
+    }
+
+    public void setDepartureTime(LocalTime departureTime) {
+        this.departureTime = departureTime;
+    }
+
+    public LocalTime getArrivalTime() {
+        return arrivalTime;
+    }
+
+    public void setArrivalTime(LocalTime arrivalTime) {
+        this.arrivalTime = arrivalTime;
+    }
+
+    public int getDepartureStationID() {
+        return departureStationID;
+    }
+
+    public void setDepartureStationID(int departureStationID) {
+        this.departureStationID = departureStationID;
+    }
+
+    public int getArrivalStationID() {
+        return arrivalStationID;
+    }
+
+    public void setArrivalStationID(int arrivalStationID) {
+        this.arrivalStationID = arrivalStationID;
+    }
 }

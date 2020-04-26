@@ -12,4 +12,25 @@ public class TimeOfTheDay {
 
     // Column H
     private LocalTime finishTime;
+
+    public TimeOfTheDay(LocalTime startingTime, LocalTime finishTime) {
+        this.startingTime = startingTime;
+        this.finishTime = finishTime;
+    }
+
+    public LocalTime getStartingTime() {
+        return startingTime;
+    }
+
+    public void setStartingTime(LocalTime startingTime) {
+        this.startingTime = startingTime;
+    }
+
+    public LocalTime getFinishTime() {
+        return finishTime;
+    }
+
+    public void setFinishTime(LocalTime finishTime) {
+        this.finishTime = finishTime;
+    }
 }

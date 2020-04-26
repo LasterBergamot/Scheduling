@@ -12,4 +12,24 @@ public class TerminalStation extends ClassWithID {
     public TerminalStation() {
         this.id = ID_COUNTER.getAndIncrement();
     }
+
+    public TerminalStation(String stationName) {
+        this.stationName = stationName;
+    }
+
+    public String getStationName() {
+        return stationName;
+    }
+
+    public void setStationName(String stationName) {
+        this.stationName = stationName;
+    }
+
+    public Timeline getTimeline() {
+        return timeline;
+    }
+
+    public void setTimeline(Timeline timeline) {
+        this.timeline = timeline;
+    }
 }
