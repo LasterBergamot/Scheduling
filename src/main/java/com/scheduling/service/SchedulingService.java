@@ -6,10 +6,20 @@ import com.scheduling.model.depot.Depot;
 import com.scheduling.model.graph.edge.Edge;
 import com.scheduling.model.graph.node.Node;
 import com.scheduling.model.station.TerminalStation;
+import org.apache.poi.ss.usermodel.*;
 
+import java.io.FileInputStream;
+import java.io.FileNotFoundException;
+import java.io.IOException;
+import java.io.InputStream;
+import java.nio.file.Files;
+import java.nio.file.Paths;
+import java.text.SimpleDateFormat;
 import java.util.*;
 
 public class SchedulingService {
+
+    private static final String PATH_INPUT_VSP_XLSX = "D:\\Input_VSP.xlsx";
 
     public void schedule() {
         System.out.println("Starting to create the proper scheduling.\n");
@@ -249,5 +259,91 @@ public class SchedulingService {
 
         System.out.println("Creating A - DONE.");
         return allOfTheEdgesOfTheNetwork;
+    }
+
+    // Source: https://gist.github.com/Munawwar/924389/adec31107f16e3938806e25c6ea2f6a15007d79b
+    public void readCSV() {
+        InputStream inputStream = null;
+        try {
+            inputStream = new FileInputStream(PATH_INPUT_VSP_XLSX);
+            Workbook workbook = WorkbookFactory.create(inputStream);
+
+            for(int index=0; index<workbook.getNumberOfSheets(); index++) {
+                Sheet sheet = workbook.getSheetAt(index);
+                String sheetName = workbook.getSheetAt(index).getSheetName();
+                convertExcelToCSV(sheet, sheetName);
+//                echoAsCSV(wb.getSheetAt(i));
+            }
+        } catch (IOException ex) {
+            ex.printStackTrace();
+        } finally {
+            try {
+                if (inputStream != null) {
+                    inputStream.close();
+                }
+            } catch (IOException ex) {
+                ex.printStackTrace();
+            }
+        }
+    }
+
+    // Source: https://stackoverflow.com/questions/17345696/convert-xlsx-to-csv-with-apache-poi-api
+    private void convertExcelToCSV(Sheet sheet, String sheetName) {
+        StringBuilder stringBuilder = new StringBuilder();
+        SimpleDateFormat timeFormat = new SimpleDateFormat("HH:mm:ss");
+
+        try {
+            Iterator<Row> rowIterator = sheet.iterator();
+            while (rowIterator.hasNext()) {
+                Row row = rowIterator.next();
+                Iterator<Cell> cellIterator = row.cellIterator();
+
+                while (cellIterator.hasNext()) {
+                    Cell cell = cellIterator.next();
+
+                    CellType type = cell.getCellTypeEnum();
+                    if (type == CellType.BOOLEAN) {
+                        stringBuilder.append(cell.getBooleanCellValue());
+                    } else if (type == CellType.NUMERIC) {
+
+                        // Source: https://stackoverflow.com/questions/25238527/java-get-timestamp-from-excel-file-without-converting-to-decimal
+                        if (DateUtil.isCellDateFormatted(cell)) {
+                            String formattedTime = timeFormat.format(cell.getDateCellValue());
+                            stringBuilder.append(formattedTime);
+                        } else {
+                            stringBuilder.append(cell.getNumericCellValue());
+                        }
+                    } else if (type == CellType.STRING) {
+                        stringBuilder.append(cell.getStringCellValue());
+                    } else if (type == CellType.BLANK) {
+
+                    } else {
+                        stringBuilder.append(cell);
+                    }
+
+                    if (cellIterator.hasNext()) {
+                        stringBuilder.append(",");
+                    }
+                }
+
+                stringBuilder.append('\n');
+            }
+
+            Files.write(Paths.get("D:\\" + sheetName + ".csv"), stringBuilder.toString().getBytes("ISO-8859-2"));
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+    }
+
+    private void echoAsCSV(Sheet sheet) {
+        Row row = null;
+
+        for (int i = 0; i < sheet.getLastRowNum(); i++) {
+            row = sheet.getRow(i);
+            for (int j = 0; j < row.getLastCellNum(); j++) {
+                System.out.print("\"" + row.getCell(j) + "\";");
+            }
+            System.out.println();
+        }
     }
 }
