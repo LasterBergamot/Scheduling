@@ -19,6 +19,7 @@ import java.nio.file.Paths;
 import java.text.SimpleDateFormat;
 import java.time.LocalTime;
 import java.util.*;
+import java.util.stream.Collectors;
 
 public class SchedulingService {
 
@@ -30,9 +31,6 @@ public class SchedulingService {
 
     private static final String ENCODING_ISO_8859_2 = "ISO-8859-2";
     private static final String CSV_DELIMITER = ",";
-
-    private static final String NAME_TERMINAL_STATION_1 = "TerminalStation1";
-    private static final String NAME_TERMINAL_STATION_2 = "TerminalStation2";
 
     private static final String FROM_TO_VA_2_FELE = "Vá.2 felé";
     private static final String FROM_TO_VA_1_FELE = "Vá.1 felé";
@@ -54,7 +52,7 @@ public class SchedulingService {
 
         // Create the stations: Vá.1 and Vá.2 with their name
         System.out.println("Creating stations.");
-        List<TerminalStation> terminalStations = Arrays.asList(new TerminalStation(NAME_TERMINAL_STATION_1), new TerminalStation(NAME_TERMINAL_STATION_2));
+        List<TerminalStation> terminalStations = Arrays.asList(new TerminalStation("TerminalStation1"), new TerminalStation("TerminalStation2"));
         System.out.println("Creating stations - DONE.");
 
         // There's only one depot, which can serve all of the services
@@ -68,7 +66,7 @@ public class SchedulingService {
 
         createTimelinesForAllOfTheTerminalStations(terminalStations, vehicleServices);
 
-        createTheTimelineForTheDepot(depot, vehicleServices, routes);
+        createTheTimelineForTheDepot(depot, terminalStations, vehicleServices, routes);
 
         Set<Node> N = createN(terminalStations);
 
@@ -298,8 +296,11 @@ public class SchedulingService {
         System.out.println("Creating Timelines for all of the Terminal Stations - DONE.");
     }
 
-    private void createTheTimelineForTheDepot(Depot depot, Set<VehicleService> vehicleServices, List<Route> routes) {
+    private void createTheTimelineForTheDepot(Depot depot, List<TerminalStation> terminalStations, Set<VehicleService> vehicleServices, List<Route> routes) {
         System.out.println("Creating the Timeline for the depot.");
+
+        depot.setTimeline(new Timeline(Collections.singletonList(new Node(NodeType.DEPOT_DEPARTURE, LocalTime.MIN)),
+                Collections.singletonList(new Node(NodeType.DEPOT_ARRIVAL, LocalTime.MAX))));
 
         System.out.println("Creating the Timeline for the depot - DONE.");
     }
