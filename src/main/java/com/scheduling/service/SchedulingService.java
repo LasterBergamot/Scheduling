@@ -19,7 +19,9 @@ import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.sql.Time;
 import java.text.SimpleDateFormat;
+import java.time.Duration;
 import java.time.LocalTime;
+import java.time.temporal.TemporalAmount;
 import java.util.*;
 import java.util.stream.Collectors;
 
@@ -74,7 +76,7 @@ public class SchedulingService {
 
         Set<Edge> E = createE(vehicleServices, terminalStations);
 
-        Set<Edge> B = createB(terminalStations, vehicleServices);
+        Set<Edge> B = createB(terminalStations, vehicleServices, routes);
 
         Set<Edge> R = createR(depot, vehicleServices, terminalStations);
 
@@ -131,7 +133,7 @@ public class SchedulingService {
             }
         }
 
-        System.out.println(String.format("Getting the Routes from the CSV - DONE. Found %d Route.", routes.size()));
+        System.out.println(String.format("Getting the Routes from the CSV - DONE. Found %d routes.", routes.size()));
         return routes;
     }
 
@@ -200,7 +202,7 @@ public class SchedulingService {
      * Get the vehicle services from the Járatok sheet, these come with the departure- and arrival stations, and create a Set of VehicleServices
      * Where Ud is needed, just use U instead
      *
-     * @return a HashSet of VehicleServices
+     * @return a LinkedHashSet of VehicleServices
      */
     private Set<VehicleService> getVehicleServicesFromTheCSV(List<TerminalStation> terminalStations) {
         System.out.println("Getting the Vehicle Services from the CSV.");
@@ -242,7 +244,7 @@ public class SchedulingService {
             }
         }
 
-        System.out.println(String.format("Getting the Vehicle Services from the CSV - DONE. Found %d VehicleService.", vehicleServices.size()));
+        System.out.println(String.format("Getting the Vehicle Services from the CSV - DONE. Found %d vehicle services.", vehicleServices.size()));
         return vehicleServices;
     }
 
@@ -315,17 +317,17 @@ public class SchedulingService {
      */
     private Set<Node> createN(List<TerminalStation> terminalStations) {
         System.out.println("Creating N.");
-        Set<Node> allOfTheNodesOfTheNetwork = new HashSet<>();
+        Set<Node> allOfTheNodesInTheNetwork = new HashSet<>();
 
         terminalStations.forEach(terminalStation -> {
             Timeline timelineFromTerminalStation = terminalStation.getTimeline();
 
-            allOfTheNodesOfTheNetwork.addAll(timelineFromTerminalStation.getDepartureNodes());
-            allOfTheNodesOfTheNetwork.addAll(timelineFromTerminalStation.getArrivalNodes());
+            allOfTheNodesInTheNetwork.addAll(timelineFromTerminalStation.getDepartureNodes());
+            allOfTheNodesInTheNetwork.addAll(timelineFromTerminalStation.getArrivalNodes());
         });
 
-        System.out.println(String.format("Creating N - DONE. Number of the Nodes in the network: %d", allOfTheNodesOfTheNetwork.size()));
-        return allOfTheNodesOfTheNetwork;
+        System.out.println(String.format("Creating N - DONE. Number of the nodes in the network: %d", allOfTheNodesInTheNetwork.size()));
+        return allOfTheNodesInTheNetwork;
     }
 
     /**
@@ -385,12 +387,75 @@ public class SchedulingService {
      *  EdgeType: OVERHEAD
      * @return a HashSet with all of the overhead edges of the graph
      */
-    private Set<Edge> createB(List<TerminalStation> terminalStations, Set<VehicleService> vehicleServices) {
+    private Set<Edge> createB(List<TerminalStation> terminalStations, Set<VehicleService> vehicleServices, List<Route> routes) {
         System.out.println("Creating B.");
         Set<Edge> edgesForOverheadServices = new HashSet<>();
 
-        System.out.println("Creating B - DONE.");
+        Map<Integer, List<Integer>> compatibleVehicleServices = getCompatibleVehicleServices(new ArrayList<>(vehicleServices), routes, terminalStations);
+
+        System.out.println(String.format("Creating B - DONE. Number of edges: %d", edgesForOverheadServices.size()));
         return edgesForOverheadServices;
+    }
+
+    // Integer: ID of VehicleService
+    // List of Integers: IDs of compatible vehicle services
+    private Map<Integer, List<Integer>> getCompatibleVehicleServices(List<VehicleService> vehicleServices, List<Route> routes, List<TerminalStation> terminalStations) {
+        Map<Integer, List<Integer>> compatibleVehicleServices = new HashMap<>();
+
+        for (int index = 0; index < vehicleServices.size() - 1; index++) {
+            VehicleService vehicleService = vehicleServices.get(index);
+
+            List<Integer> compatibleVehicleServicesIDs = new ArrayList<>();
+            for (int innerIndex = index + 1; innerIndex < vehicleServices.size(); innerIndex++) {
+                VehicleService innerVehicleService = vehicleServices.get(innerIndex);
+
+                if (isCompatible(vehicleService, innerVehicleService, routes)) {
+                    compatibleVehicleServicesIDs.add(innerVehicleService.getId());
+                }
+            }
+
+            compatibleVehicleServices.put(vehicleService.getId(), compatibleVehicleServicesIDs);
+        }
+
+        return compatibleVehicleServices;
+    }
+
+    private boolean isCompatible(VehicleService one, VehicleService other, List<Route> routes) {
+        int arrivalStationIDOfOne = one.getArrivalStationID();
+        int departureStationIDOfOther = other.getDepartureStationID();
+
+        if (arrivalStationIDOfOne == departureStationIDOfOther) {
+            return false;
+        }
+
+        LocalTime arrivalTimeOfOne = one.getArrivalTime();
+        LocalTime departureTimeOfOther = other.getDepartureTime();
+
+        List<Route> NTypeRoutes = routes.stream().filter(route -> route.getRouteType().equals(RouteType.N)).collect(Collectors.toList());
+        LocalTime departureTimeOfOne = one.getDepartureTime();
+
+        long differenceInMinutes = Math.abs(Duration.between(departureTimeOfOther, arrivalTimeOfOne).toMinutes());
+        for (Route route : NTypeRoutes) {
+            if (isTimeInsideTimeOfTheDay(departureTimeOfOne, route.getTimeOfTheDay())) {
+                differenceInMinutes -= route.getTechnicalTime();
+                differenceInMinutes -= route.getCompensatoryTime();
+
+                break;
+            }
+        }
+
+        boolean oneArrivedBeforeOrAtTheSameTimeAsTheOtherDeparts = arrivalTimeOfOne.isBefore(departureTimeOfOther) || arrivalTimeOfOne.equals(departureTimeOfOther);
+
+        long timeToGetFromTheDepartureStationToTheArrivalStation = Duration.between(other.getDepartureTime(), other.getArrivalTime()).toMinutes();
+
+        return oneArrivedBeforeOrAtTheSameTimeAsTheOtherDeparts && (differenceInMinutes < timeToGetFromTheDepartureStationToTheArrivalStation);
+    }
+
+    private boolean isTimeInsideTimeOfTheDay(LocalTime time, TimeOfTheDay timeOfTheDay) {
+        LocalTime startingTime = timeOfTheDay.getStartingTime();
+        LocalTime finishTime = timeOfTheDay.getFinishTime();
+
+        return (time.isAfter(startingTime) || time.equals(startingTime)) && (time.isBefore(finishTime) || time.equals(finishTime));
     }
 
     /**
@@ -514,16 +579,16 @@ public class SchedulingService {
      */
     private Set<Edge> createA(Set<Edge> E, Set<Edge> B, Set<Edge> R, Set<Edge> K, Set<Edge> W) {
         System.out.println("Creating A.");
-        Set<Edge> allOfTheEdgesOfTheNetwork = new HashSet<>();
+        Set<Edge> allOfTheEdgesInTheNetwork = new HashSet<>();
 
-        allOfTheEdgesOfTheNetwork.addAll(E);
-        allOfTheEdgesOfTheNetwork.addAll(B);
-        allOfTheEdgesOfTheNetwork.addAll(R);
-        allOfTheEdgesOfTheNetwork.addAll(K);
-        allOfTheEdgesOfTheNetwork.addAll(W);
+        allOfTheEdgesInTheNetwork.addAll(E);
+        allOfTheEdgesInTheNetwork.addAll(B);
+        allOfTheEdgesInTheNetwork.addAll(R);
+        allOfTheEdgesInTheNetwork.addAll(K);
+        allOfTheEdgesInTheNetwork.addAll(W);
 
-        System.out.println("Creating A - DONE.");
-        return allOfTheEdgesOfTheNetwork;
+        System.out.println(String.format("Creating A - DONE. Number of edges in the network: %d", allOfTheEdgesInTheNetwork.size()));
+        return allOfTheEdgesInTheNetwork;
     }
 
     // Source: https://gist.github.com/Munawwar/924389/adec31107f16e3938806e25c6ea2f6a15007d79b

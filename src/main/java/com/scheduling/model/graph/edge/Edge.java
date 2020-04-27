@@ -7,19 +7,11 @@ public class Edge {
     private EdgeType edgeType;
     private int departureNodeID;
     private int arrivalNodeID;
-    private int weight = 0;
 
     public Edge(EdgeType edgeType, int departureNodeID, int arrivalNodeID) {
         this.edgeType = edgeType;
         this.departureNodeID = departureNodeID;
         this.arrivalNodeID = arrivalNodeID;
-    }
-
-    public Edge(EdgeType edgeType, int departureNodeID, int arrivalNodeID, int weight) {
-        this.edgeType = edgeType;
-        this.departureNodeID = departureNodeID;
-        this.arrivalNodeID = arrivalNodeID;
-        this.weight = weight;
     }
 
     public EdgeType getEdgeType() {
@@ -46,12 +38,13 @@ public class Edge {
         this.arrivalNodeID = arrivalNodeID;
     }
 
-    public int getWeight() {
-        return weight;
-    }
-
-    public void setWeight(int weight) {
-        this.weight = weight;
+    @Override
+    public String toString() {
+        return "Edge{" +
+                "edgeType=" + edgeType +
+                ", departureNodeID=" + departureNodeID +
+                ", arrivalNodeID=" + arrivalNodeID +
+                '}';
     }
 
     @Override
