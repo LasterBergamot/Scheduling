@@ -7,7 +7,9 @@ import com.scheduling.model.csv.vehicleservice.VehicleService;
 import com.scheduling.model.depot.Depot;
 import com.scheduling.model.graph.edge.Edge;
 import com.scheduling.model.graph.node.Node;
+import com.scheduling.model.graph.node.NodeType;
 import com.scheduling.model.station.TerminalStation;
+import com.scheduling.model.station.Timeline;
 import org.apache.poi.ss.usermodel.*;
 
 import java.io.*;
@@ -21,8 +23,10 @@ import java.util.*;
 public class SchedulingService {
 
     private static final String PATH_INPUT_VSP_XLSX = "D:\\Input_VSP.xlsx";
-    private static final String PATH_PARAMETEREK_CSV = "D:\\Parameterek.csv";
-    private static final String PATH_JARATOK_CSV = "D:\\Jaratok.csv";
+    private static final String PATH_PARAMETEREK_CSV = "C:\\asd\\Parameterek.csv";
+//    private static final String PATH_PARAMETEREK_CSV = "D:\\Parameterek.csv";
+    private static final String PATH_JARATOK_CSV = "C:\\asd\\Jaratok.csv";
+//    private static final String PATH_JARATOK_CSV = "D:\\Jaratok.csv";
 
     private static final String ENCODING_ISO_8859_2 = "ISO-8859-2";
     private static final String CSV_DELIMITER = ",";
@@ -60,15 +64,7 @@ public class SchedulingService {
 
         List<Route> routes = getRoutesFromTheCSV(terminalStations, depot);
 
-        routes.forEach(System.out::println);
-
-        System.out.println();
-
         Set<VehicleService> vehicleServices = getVehicleServicesFromTheCSV(terminalStations);
-
-        vehicleServices.forEach(System.out::println);
-
-        System.out.println();
 
         createTimelinesForAllOfTheTerminalStations(terminalStations, vehicleServices);
 
@@ -135,7 +131,7 @@ public class SchedulingService {
             }
         }
 
-        System.out.println("Getting the Routes from the CSV - DONE.");
+        System.out.println(String.format("Getting the Routes from the CSV - DONE. Found %d Route.", routes.size()));
         return routes;
     }
 
@@ -246,7 +242,7 @@ public class SchedulingService {
             }
         }
 
-        System.out.println("Getting the Vehicle Services from the CSV - DONE.");
+        System.out.println(String.format("Getting the Vehicle Services from the CSV - DONE. Found %d VehicleService.", vehicleServices.size()));
         return vehicleServices;
     }
 
@@ -282,6 +278,22 @@ public class SchedulingService {
      */
     private void createTimelinesForAllOfTheTerminalStations(List<TerminalStation> terminalStations, Set<VehicleService> vehicleServices) {
         System.out.println("Creating Timelines for all of the Terminal Stations.");
+
+        terminalStations.forEach(terminalStation -> {
+            int terminalStationID = terminalStation.getId();
+            List<Node> departureNodes = new ArrayList<>();
+            List<Node> arrivalNodes = new ArrayList<>();
+
+            vehicleServices.forEach(vehicleService -> {
+                if (terminalStationID == vehicleService.getDepartureStationID()) {
+                    departureNodes.add(new Node(NodeType.DEPARTURE, vehicleService.getDepartureTime()));
+                } else {
+                    arrivalNodes.add(new Node(NodeType.ARRIVAL, vehicleService.getArrivalTime()));
+                }
+            });
+
+            terminalStation.setTimeline(new Timeline(departureNodes, arrivalNodes));
+        });
 
         System.out.println("Creating Timelines for all of the Terminal Stations - DONE.");
     }
