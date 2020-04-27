@@ -5,6 +5,7 @@ import com.scheduling.model.csv.route.RouteType;
 import com.scheduling.model.csv.route.TimeOfTheDay;
 import com.scheduling.model.csv.vehicleservice.VehicleService;
 import com.scheduling.model.depot.Depot;
+import com.scheduling.model.graph.Graph;
 import com.scheduling.model.graph.edge.Edge;
 import com.scheduling.model.graph.edge.EdgeType;
 import com.scheduling.model.graph.node.Node;
@@ -87,8 +88,9 @@ public class SchedulingService {
 
         Set<Edge> A = createA(E, B, R, K, W);
 
-        // E: all of the edges of the graph. Union of all Ads.
-        Set<Edge> allOfTheEdgesOfTheGraph;
+        createGraphFromEdges(new ArrayList<>(A));
+
+        // To create a CSV from the edges: iterate over all of the edges and put the IDs and the type in these columns: Source, Target and Type
 
         System.out.println("\nDone with creating a proper scheduling.");
     }
@@ -696,6 +698,14 @@ public class SchedulingService {
 
         System.out.println(String.format("Creating A - DONE. Number of edges in the network: %d", allOfTheEdgesInTheNetwork.size()));
         return allOfTheEdgesInTheNetwork;
+    }
+
+    private void createGraphFromEdges(List<Edge> edges) {
+        Graph<Integer> graph = new Graph<>();
+
+        edges.forEach(edge -> graph.addEdge(edge.getDepartureNodeID(), edge.getArrivalNodeID(), false));
+
+        System.out.println("Graph:\n" + graph.toString());
     }
 
     // Source: https://gist.github.com/Munawwar/924389/adec31107f16e3938806e25c6ea2f6a15007d79b
