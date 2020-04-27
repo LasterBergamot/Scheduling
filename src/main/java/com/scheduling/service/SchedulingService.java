@@ -29,10 +29,10 @@ import java.util.stream.Collectors;
 public class SchedulingService {
 
     private static final String PATH_INPUT_VSP_XLSX = "D:\\Input_VSP.xlsx";
-    private static final String PATH_PARAMETEREK_CSV = "C:\\asd\\Parameterek.csv";
-//    private static final String PATH_PARAMETEREK_CSV = "D:\\Parameterek.csv";
-    private static final String PATH_JARATOK_CSV = "C:\\asd\\Jaratok.csv";
-//    private static final String PATH_JARATOK_CSV = "D:\\Jaratok.csv";
+//    private static final String PATH_PARAMETEREK_CSV = "C:\\asd\\Parameterek.csv";
+    private static final String PATH_PARAMETEREK_CSV = "D:\\Parameterek.csv";
+//    private static final String PATH_JARATOK_CSV = "C:\\asd\\Jaratok.csv";
+    private static final String PATH_JARATOK_CSV = "D:\\Jaratok.csv";
 
     private static final String ENCODING_ISO_8859_2 = "ISO-8859-2";
     private static final String CSV_DELIMITER = ",";
@@ -395,6 +395,7 @@ public class SchedulingService {
         Map<Integer, List<Integer>> compatibleVehicleServices = getCompatibleVehicleServices(new ArrayList<>(vehicleServices), routes);
 
         // Creating edges using the two phase merging strategy
+        System.out.println("Starting the two phase merging strategy.");
         // First phase:
         Set<Edge> edgesFromTheFirstPhase = firstPhase(terminalStations, compatibleVehicleServices, new ArrayList<>(vehicleServices));
 
@@ -406,6 +407,7 @@ public class SchedulingService {
     }
 
     private Set<Edge> firstPhase(List<TerminalStation> terminalStations, Map<Integer, List<Integer>> compatibleVehicleServices, List<VehicleService> vehicleServices) {
+        System.out.println("Starting the First Phase.");
         Set<Edge> edgesFromTheFirstPhase = new LinkedHashSet<>();
 
         // Need to use this approach, because the compatibleVehicleServices map is one VehicleService shy of vehicleServices
@@ -448,14 +450,56 @@ public class SchedulingService {
             edgesFromTheFirstPhase.add(new Edge(EdgeType.OVERHEAD, departureNodeID, arrivalNodeID));
         }
 
+        System.out.println(String.format("Done with the First Phase. Number of edges: %d", edgesFromTheFirstPhase.size()));
         return edgesFromTheFirstPhase;
     }
 
     private Set<Edge> secondPhase(List<Edge> edgesFromTheFirstPhase, List<TerminalStation> terminalStations) {
+        System.out.println("Starting the Second Phase.");
         Set<Edge> edgesFromTheSecondPhase = new LinkedHashSet<>();
 
-        // Check for each terminal station which arrival nodes are found inside the 'edgesFromTheFirstPhase' set
+        // The arrival nodes found inside 'edgesFromTheFirstPhase' are originally departure nodes on each terminal station
 
+        // Get the arrival nodes with how many edges point to them, so every departure node
+        // Integer: ID of arrival node
+        // List<Integer>: departure node IDs
+        Map<Integer, List<Integer>> arrivalNodeWithDepartureNodes = new LinkedHashMap<>();
+
+        edgesFromTheFirstPhase.forEach(edge -> {
+            int arrivalNodeID = edge.getArrivalNodeID();
+            int departureNodeID = edge.getDepartureNodeID();
+
+            List<Integer> departureNodeIDs = arrivalNodeWithDepartureNodes.containsKey(arrivalNodeID) ? arrivalNodeWithDepartureNodes.get(arrivalNodeID) : new ArrayList<>();
+            departureNodeIDs.add(departureNodeID);
+            arrivalNodeWithDepartureNodes.put(arrivalNodeID, departureNodeIDs);
+        });
+
+        // Go through the keys (arrival node ID) of the map above and check if this key is inside the current terminal station's departure nodes
+        TerminalStation terminalStation1 = terminalStations.get(0);
+        TerminalStation terminalStation2 = terminalStations.get(1);
+        List<Integer> departureNodeIDsFromTerminalStation1 = terminalStation1.getTimeline().getDepartureNodes()
+                .stream()
+                .map(ClassWithID::getId)
+                .collect(Collectors.toList());
+
+        arrivalNodeWithDepartureNodes.forEach((arrivalNodeID, departureNodeIDs) -> {
+            TerminalStation terminalStation = departureNodeIDsFromTerminalStation1.contains(arrivalNodeID)? terminalStation2: terminalStation1;
+
+            if (departureNodeIDs.size() == 1) {
+                edgesFromTheSecondPhase.add(new Edge(EdgeType.OVERHEAD, departureNodeIDs.get(0), arrivalNodeID));
+            } else {
+                List<Node> arrivalNodes = terminalStation.getTimeline().getArrivalNodes()
+                        .stream()
+                        .filter(node -> departureNodeIDs.contains(node.getId()))
+                        .sorted(Comparator.comparing(Node::getLocalTime))
+                        .collect(Collectors.toList());
+
+                Node lastDeparting = arrivalNodes.get(arrivalNodes.size() - 1);
+                edgesFromTheSecondPhase.add(new Edge(EdgeType.OVERHEAD, lastDeparting.getId(), arrivalNodeID));
+            }
+        });
+
+        System.out.println(String.format("Done with the Second Phase. Number of edges: %d", edgesFromTheSecondPhase.size()));
         return edgesFromTheSecondPhase;
     }
 
@@ -486,6 +530,7 @@ public class SchedulingService {
         int arrivalStationIDOfOne = one.getArrivalStationID();
         int departureStationIDOfOther = other.getDepartureStationID();
 
+        // the timeToGetFromTheDepartureStationToTheArrivalStation would be zero
         if (arrivalStationIDOfOne == departureStationIDOfOther) {
             return false;
         }
