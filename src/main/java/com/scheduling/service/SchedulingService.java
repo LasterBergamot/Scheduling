@@ -11,6 +11,7 @@ import com.scheduling.model.graph.node.Node;
 import com.scheduling.model.graph.node.NodeType;
 import com.scheduling.model.station.TerminalStation;
 import com.scheduling.model.station.Timeline;
+import com.scheduling.model.util.ClassWithID;
 import org.apache.poi.ss.usermodel.*;
 
 import java.io.*;
@@ -313,11 +314,11 @@ public class SchedulingService {
     /**
      * N: all departure- and arrival times (nodes) from the terminal stations
      *
-     * @return a HashSet containing all of the nodes of the network
+     * @return a LinkedHashSet containing all of the nodes of the network
      */
     private Set<Node> createN(List<TerminalStation> terminalStations) {
         System.out.println("Creating N.");
-        Set<Node> allOfTheNodesInTheNetwork = new HashSet<>();
+        Set<Node> allOfTheNodesInTheNetwork = new LinkedHashSet<>();
 
         terminalStations.forEach(terminalStation -> {
             Timeline timelineFromTerminalStation = terminalStation.getTimeline();
@@ -385,21 +386,68 @@ public class SchedulingService {
     /**
      *  Bd from D: two phase merging strategy
      *  EdgeType: OVERHEAD
-     * @return a HashSet with all of the overhead edges of the graph
+     * @return a LinkedHashSet with all of the overhead edges of the graph
      */
     private Set<Edge> createB(List<TerminalStation> terminalStations, Set<VehicleService> vehicleServices, List<Route> routes) {
         System.out.println("Creating B.");
-        Set<Edge> edgesForOverheadServices = new HashSet<>();
+        Set<Edge> edgesForOverheadServices = new LinkedHashSet<>();
 
-        Map<Integer, List<Integer>> compatibleVehicleServices = getCompatibleVehicleServices(new ArrayList<>(vehicleServices), routes, terminalStations);
+        Map<Integer, List<Integer>> compatibleVehicleServices = getCompatibleVehicleServices(new ArrayList<>(vehicleServices), routes);
+
+        // Creating edges using two phase merging strategy
+        // First phase:
+        Set<Edge> edgesFromTheFirstPhase = firstPhase(terminalStations, compatibleVehicleServices, new ArrayList<>(vehicleServices));
+
+        // Second phase:
 
         System.out.println(String.format("Creating B - DONE. Number of edges: %d", edgesForOverheadServices.size()));
         return edgesForOverheadServices;
     }
 
+    private Set<Edge> firstPhase(List<TerminalStation> terminalStations, Map<Integer, List<Integer>> compatibleVehicleServices, List<VehicleService> vehicleServices) {
+        Set<Edge> edgesFromTheFirstPhase = new LinkedHashSet<>();
+
+        // Need to use this approach, because the compatibleVehicleServices map is one VehicleService shy of vehicleServices
+        for (int index = 0; index < compatibleVehicleServices.size(); index++) {
+            VehicleService vehicleService = vehicleServices.get(index);
+            TerminalStation terminalStation1 = terminalStations.get(0);
+            TerminalStation terminalStation2 = terminalStations.get(1);
+            List<Integer> compatibleVehicleServiceIDsForThisVehicleService = compatibleVehicleServices.get(vehicleService.getId());
+
+            // If there are no compatible vehicle services for this vehicle service -> skip this one
+            if (compatibleVehicleServiceIDsForThisVehicleService.isEmpty()) {
+                continue;
+            }
+
+            List<VehicleService> vehicleServicesAccordingToTheIDs = vehicleServices.stream()
+                    .filter(vehicleService1 -> compatibleVehicleServiceIDsForThisVehicleService.contains(vehicleService1.getId()))
+                    .collect(Collectors.toList());
+
+            // From the overhead edge's point of view this node will be the departure node
+            int departureNodeID = getNodeID(vehicleService.getArrivalTime(), vehicleService.getArrivalStationID(), terminalStations, false);
+
+            // The vehicle service's arrival node is on the first station -> get the other vehicle service from the second station
+            List<Node> departureNodesFromTerminalStation = vehicleService.getArrivalStationID() == terminalStation1.getId()
+                    ? terminalStation2.getTimeline().getDepartureNodes()
+                    : terminalStation1.getTimeline().getDepartureNodes();
+
+            LocalTime departureTimeFromTheFirstCompatibleVehicleService = vehicleServicesAccordingToTheIDs.get(0).getDepartureTime();
+
+            Optional<Node> departureNode = departureNodesFromTerminalStation.stream()
+                    .filter(node -> node.getLocalTime().equals(departureTimeFromTheFirstCompatibleVehicleService))
+                    .findFirst();
+
+            int arrivalNodeID = departureNode.map(ClassWithID::getId).orElse(0);
+
+            edgesFromTheFirstPhase.add(new Edge(EdgeType.OVERHEAD, departureNodeID, arrivalNodeID));
+        }
+
+        return edgesFromTheFirstPhase;
+    }
+
     // Integer: ID of VehicleService
     // List of Integers: IDs of compatible vehicle services
-    private Map<Integer, List<Integer>> getCompatibleVehicleServices(List<VehicleService> vehicleServices, List<Route> routes, List<TerminalStation> terminalStations) {
+    private Map<Integer, List<Integer>> getCompatibleVehicleServices(List<VehicleService> vehicleServices, List<Route> routes) {
         Map<Integer, List<Integer>> compatibleVehicleServices = new HashMap<>();
 
         for (int index = 0; index < vehicleServices.size() - 1; index++) {
@@ -491,11 +539,11 @@ public class SchedulingService {
      *
      *  EdgeType: DEPOT
      *
-     * @return a HashSet containing all of the depot departing- and arriving edges
+     * @return a LinkedHashSet containing all of the depot departing- and arriving edges
      */
     private Set<Edge> createR(Depot depot, Set<VehicleService> vehicleServices, List<TerminalStation> terminalStations) {
         System.out.println("Creating R.");
-        Set<Edge> depotDepartingAndArrivingEdges = new HashSet<>();
+        Set<Edge> depotDepartingAndArrivingEdges = new LinkedHashSet<>();
 
         Timeline timelineFromDepot = depot.getTimeline();
         int depotDepartureNodeID = timelineFromDepot.getDepartureNodes().get(0).getId();
@@ -518,11 +566,11 @@ public class SchedulingService {
      * For the depot: create edges between arrivalTimes and the departureTimes
      * EdgeType: DEPOT
      *
-     * @return a HashSet with all of the circular flow edges between depot arriving- and departing nodes
+     * @return a LinkedHashSet with all of the circular flow edges between depot arriving- and departing nodes
      */
     private Set<Edge> createK(Depot depot) {
         System.out.println("Creating K.");
-        Set<Edge> depotCircularFlowEdges = new HashSet<>();
+        Set<Edge> depotCircularFlowEdges = new LinkedHashSet<>();
 
         Timeline timelineFromDepot = depot.getTimeline();
         int depotDepartureNodeID = timelineFromDepot.getDepartureNodes().get(0).getId();
@@ -543,11 +591,11 @@ public class SchedulingService {
      * Connect the times (nodes) to form an edge
      * EdgeType: WAITING
      *
-     * @return a HashSet containing the waiting edges for each station
+     * @return a LinkedHashSet containing the waiting edges for each station
      */
     private Set<Edge> createW(List<TerminalStation> terminalStations) {
         System.out.println("Creating W.");
-        Set<Edge> waitingEdgesForTheTerminalStations = new HashSet<>();
+        Set<Edge> waitingEdgesForTheTerminalStations = new LinkedHashSet<>();
 
         terminalStations.forEach(terminalStation -> {
             Timeline timelineFromTerminalStation = terminalStation.getTimeline();
@@ -575,11 +623,11 @@ public class SchedulingService {
      * @param K - circular flow edges for the depot
      * @param W - waiting edges for each terminal station
      *
-     * @return a HashSet containing all of the edges of the network
+     * @return a LinkedHashSet containing all of the edges of the network
      */
     private Set<Edge> createA(Set<Edge> E, Set<Edge> B, Set<Edge> R, Set<Edge> K, Set<Edge> W) {
         System.out.println("Creating A.");
-        Set<Edge> allOfTheEdgesInTheNetwork = new HashSet<>();
+        Set<Edge> allOfTheEdgesInTheNetwork = new LinkedHashSet<>();
 
         allOfTheEdgesInTheNetwork.addAll(E);
         allOfTheEdgesInTheNetwork.addAll(B);
