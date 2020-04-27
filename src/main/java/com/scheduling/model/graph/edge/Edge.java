@@ -5,7 +5,13 @@ public class Edge {
     private EdgeType edgeType;
     private int departureNodeID;
     private int arrivalNodeID;
-    private int weight;
+    private int weight = 0;
+
+    public Edge(EdgeType edgeType, int departureNodeID, int arrivalNodeID) {
+        this.edgeType = edgeType;
+        this.departureNodeID = departureNodeID;
+        this.arrivalNodeID = arrivalNodeID;
+    }
 
     public Edge(EdgeType edgeType, int departureNodeID, int arrivalNodeID, int weight) {
         this.edgeType = edgeType;

@@ -6,6 +6,7 @@ import com.scheduling.model.csv.route.TimeOfTheDay;
 import com.scheduling.model.csv.vehicleservice.VehicleService;
 import com.scheduling.model.depot.Depot;
 import com.scheduling.model.graph.edge.Edge;
+import com.scheduling.model.graph.edge.EdgeType;
 import com.scheduling.model.graph.node.Node;
 import com.scheduling.model.graph.node.NodeType;
 import com.scheduling.model.station.TerminalStation;
@@ -70,7 +71,7 @@ public class SchedulingService {
 
         Set<Node> N = createN(terminalStations);
 
-        Set<Edge> E = createE(vehicleServices, routes);
+        Set<Edge> E = createE(vehicleServices, terminalStations);
 
         Set<Edge> B = createB(terminalStations, vehicleServices);
 
@@ -299,8 +300,9 @@ public class SchedulingService {
     private void createTheTimelineForTheDepot(Depot depot, List<TerminalStation> terminalStations, Set<VehicleService> vehicleServices, List<Route> routes) {
         System.out.println("Creating the Timeline for the depot.");
 
-        depot.setTimeline(new Timeline(Collections.singletonList(new Node(NodeType.DEPOT_DEPARTURE, LocalTime.MIN)),
-                Collections.singletonList(new Node(NodeType.DEPOT_ARRIVAL, LocalTime.MAX))));
+        List<Node> departureNodes = Collections.singletonList(new Node(NodeType.DEPOT_DEPARTURE, LocalTime.MIN));
+        List<Node> arrivalNodes = Collections.singletonList(new Node(NodeType.DEPOT_ARRIVAL, LocalTime.MAX));
+        depot.setTimeline(new Timeline(departureNodes, arrivalNodes));
 
         System.out.println("Creating the Timeline for the depot - DONE.");
     }
@@ -316,6 +318,7 @@ public class SchedulingService {
 
         terminalStations.forEach(terminalStation -> {
             Timeline timelineFromTerminalStation = terminalStation.getTimeline();
+
             allOfTheNodesOfTheNetwork.addAll(timelineFromTerminalStation.getDepartureNodes());
             allOfTheNodesOfTheNetwork.addAll(timelineFromTerminalStation.getArrivalNodes());
         });
@@ -337,14 +340,43 @@ public class SchedulingService {
      *
      * EdgeType: SERVICE
      *
-     * @return a HashSet containing all of the edges for scheduled services
+     * @return a LinkedHashSet containing all of the edges for scheduled services
      */
-    private Set<Edge> createE(Set<VehicleService> vehicleServices, List<Route> routes) {
+    private Set<Edge> createE(Set<VehicleService> vehicleServices, List<TerminalStation> terminalStations) {
         System.out.println("Creating E.");
-        Set<Edge> edgesForScheduledServices = new HashSet<>();
+        Set<Edge> edgesForScheduledServices = new LinkedHashSet<>();
 
-        System.out.println("Creating E - DONE.");
+        vehicleServices.forEach(vehicleService -> {
+            int departureNodeID = getNodeID(vehicleService.getDepartureTime(), vehicleService.getDepartureStationID(), terminalStations, true);
+            int arrivalNodeID = getNodeID(vehicleService.getArrivalTime(), vehicleService.getArrivalStationID(), terminalStations, false);
+
+            edgesForScheduledServices.add(new Edge(EdgeType.SERVICE, departureNodeID, arrivalNodeID));
+        });
+
+        System.out.println(String.format("Creating E - DONE. Number of edges: %d", edgesForScheduledServices.size()));
         return edgesForScheduledServices;
+    }
+
+    private int getNodeID(LocalTime timeFromVehicleService, int terminalStationIDFromVehicleService, List<TerminalStation> terminalStations, boolean isDeparture) {
+        int nodeID = 0;
+
+        Optional<TerminalStation> terminalStation = terminalStations.stream()
+                .filter(terminalStation1 -> terminalStation1.getId() == terminalStationIDFromVehicleService)
+                .findFirst();
+
+        if (terminalStation.isPresent()) {
+            Timeline timeline = terminalStation.get().getTimeline();
+            List<Node> nodes = isDeparture ? timeline.getDepartureNodes() : timeline.getArrivalNodes();
+            Optional<Node> node = nodes.stream()
+                    .filter(node1 -> node1.getLocalTime().equals(timeFromVehicleService))
+                    .findFirst();
+
+            if (node.isPresent()) {
+                nodeID = node.get().getId();
+            }
+        }
+
+        return nodeID;
     }
 
     /**
