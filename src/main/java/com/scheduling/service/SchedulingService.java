@@ -314,7 +314,13 @@ public class SchedulingService {
         System.out.println("Creating N.");
         Set<Node> allOfTheNodesOfTheNetwork = new HashSet<>();
 
-        System.out.println("Creating N - DONE.");
+        terminalStations.forEach(terminalStation -> {
+            Timeline timelineFromTerminalStation = terminalStation.getTimeline();
+            allOfTheNodesOfTheNetwork.addAll(timelineFromTerminalStation.getDepartureNodes());
+            allOfTheNodesOfTheNetwork.addAll(timelineFromTerminalStation.getArrivalNodes());
+        });
+
+        System.out.println(String.format("Creating N - DONE. Number of the Nodes in the network: %d", allOfTheNodesOfTheNetwork.size()));
         return allOfTheNodesOfTheNetwork;
     }
 
