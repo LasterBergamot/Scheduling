@@ -390,15 +390,16 @@ public class SchedulingService {
      */
     private Set<Edge> createB(List<TerminalStation> terminalStations, Set<VehicleService> vehicleServices, List<Route> routes) {
         System.out.println("Creating B.");
-        Set<Edge> edgesForOverheadServices = new LinkedHashSet<>();
+        Set<Edge> edgesForOverheadServices;
 
         Map<Integer, List<Integer>> compatibleVehicleServices = getCompatibleVehicleServices(new ArrayList<>(vehicleServices), routes);
 
-        // Creating edges using two phase merging strategy
+        // Creating edges using the two phase merging strategy
         // First phase:
         Set<Edge> edgesFromTheFirstPhase = firstPhase(terminalStations, compatibleVehicleServices, new ArrayList<>(vehicleServices));
 
         // Second phase:
+        edgesForOverheadServices = secondPhase(new ArrayList<>(edgesFromTheFirstPhase), terminalStations);
 
         System.out.println(String.format("Creating B - DONE. Number of edges: %d", edgesForOverheadServices.size()));
         return edgesForOverheadServices;
@@ -409,6 +410,8 @@ public class SchedulingService {
 
         // Need to use this approach, because the compatibleVehicleServices map is one VehicleService shy of vehicleServices
         for (int index = 0; index < compatibleVehicleServices.size(); index++) {
+
+            // Preparation part
             VehicleService vehicleService = vehicleServices.get(index);
             TerminalStation terminalStation1 = terminalStations.get(0);
             TerminalStation terminalStation2 = terminalStations.get(1);
@@ -423,14 +426,17 @@ public class SchedulingService {
                     .filter(vehicleService1 -> compatibleVehicleServiceIDsForThisVehicleService.contains(vehicleService1.getId()))
                     .collect(Collectors.toList());
 
+            // Get where this vehicle service is an arrival node
             // From the overhead edge's point of view this node will be the departure node
             int departureNodeID = getNodeID(vehicleService.getArrivalTime(), vehicleService.getArrivalStationID(), terminalStations, false);
 
+            // Get the possible departure nodes
             // The vehicle service's arrival node is on the first station -> get the other vehicle service from the second station
             List<Node> departureNodesFromTerminalStation = vehicleService.getArrivalStationID() == terminalStation1.getId()
                     ? terminalStation2.getTimeline().getDepartureNodes()
                     : terminalStation1.getTimeline().getDepartureNodes();
 
+            // Getting the node ID of the first compatible vehicle service
             LocalTime departureTimeFromTheFirstCompatibleVehicleService = vehicleServicesAccordingToTheIDs.get(0).getDepartureTime();
 
             Optional<Node> departureNode = departureNodesFromTerminalStation.stream()
@@ -443,6 +449,14 @@ public class SchedulingService {
         }
 
         return edgesFromTheFirstPhase;
+    }
+
+    private Set<Edge> secondPhase(List<Edge> edgesFromTheFirstPhase, List<TerminalStation> terminalStations) {
+        Set<Edge> edgesFromTheSecondPhase = new LinkedHashSet<>();
+
+        // Check for each terminal station which arrival nodes are found inside the 'edgesFromTheFirstPhase' set
+
+        return edgesFromTheSecondPhase;
     }
 
     // Integer: ID of VehicleService
