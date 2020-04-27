@@ -75,7 +75,7 @@ public class SchedulingService {
 
         Set<Edge> B = createB(terminalStations, vehicleServices);
 
-        Set<Edge> R = createR(depot, vehicleServices);
+        Set<Edge> R = createR(depot, vehicleServices, terminalStations);
 
         Set<Edge> K = createK(depot);
 
@@ -427,11 +427,23 @@ public class SchedulingService {
      *
      * @return a HashSet containing all of the depot departing- and arriving edges
      */
-    private Set<Edge> createR(Depot depot, Set<VehicleService> vehicleServices) {
+    private Set<Edge> createR(Depot depot, Set<VehicleService> vehicleServices, List<TerminalStation> terminalStations) {
         System.out.println("Creating R.");
         Set<Edge> depotDepartingAndArrivingEdges = new HashSet<>();
 
-        System.out.println("Creating R - DONE.");
+        Timeline timelineFromDepot = depot.getTimeline();
+        int depotDepartureNodeID = timelineFromDepot.getDepartureNodes().get(0).getId();
+        int depotArrivalNodeID = timelineFromDepot.getArrivalNodes().get(0).getId();
+
+        vehicleServices.forEach(vehicleService -> {
+            int vehicleServiceDepartureNodeID = getNodeID(vehicleService.getDepartureTime(), vehicleService.getDepartureStationID(), terminalStations, true);
+            int vehicleServiceArrivalNodeID = getNodeID(vehicleService.getArrivalTime(), vehicleService.getArrivalStationID(), terminalStations, false);
+
+            depotDepartingAndArrivingEdges.add(new Edge(EdgeType.DEPOT, depotDepartureNodeID, vehicleServiceDepartureNodeID));
+            depotDepartingAndArrivingEdges.add(new Edge(EdgeType.DEPOT, depotArrivalNodeID, vehicleServiceArrivalNodeID));
+        });
+
+        System.out.println(String.format("Creating R - DONE. Number of edges: %d", depotDepartingAndArrivingEdges.size()));
         return depotDepartingAndArrivingEdges;
     }
 
