@@ -458,7 +458,13 @@ public class SchedulingService {
         System.out.println("Creating K.");
         Set<Edge> depotCircularFlowEdges = new HashSet<>();
 
-        System.out.println("Creating K - DONE.");
+        Timeline timelineFromDepot = depot.getTimeline();
+        int depotDepartureNodeID = timelineFromDepot.getDepartureNodes().get(0).getId();
+        int depotArrivalNodeID = timelineFromDepot.getArrivalNodes().get(0).getId();
+
+        depotCircularFlowEdges.add(new Edge(EdgeType.DEPOT, depotDepartureNodeID, depotArrivalNodeID));
+
+        System.out.println(String.format("Creating K - DONE. Number of edges: %d", depotCircularFlowEdges.size()));
         return depotCircularFlowEdges;
     }
 
