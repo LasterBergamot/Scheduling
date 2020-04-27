@@ -17,6 +17,7 @@ import java.io.*;
 import java.nio.charset.Charset;
 import java.nio.file.Files;
 import java.nio.file.Paths;
+import java.sql.Time;
 import java.text.SimpleDateFormat;
 import java.time.LocalTime;
 import java.util.*;
@@ -483,7 +484,19 @@ public class SchedulingService {
         System.out.println("Creating W.");
         Set<Edge> waitingEdgesForTheTerminalStations = new HashSet<>();
 
-        System.out.println("Creating W - DONE.");
+        terminalStations.forEach(terminalStation -> {
+            Timeline timelineFromTerminalStation = terminalStation.getTimeline();
+            List<Node> departureNodes = timelineFromTerminalStation.getDepartureNodes();
+
+            for (int index = 0; index < departureNodes.size() - 1; index++) {
+                Node firstNode = departureNodes.get(index);
+                Node secondNode = departureNodes.get(index + 1);
+
+                waitingEdgesForTheTerminalStations.add(new Edge(EdgeType.WAITING, firstNode.getId(), secondNode.getId()));
+            }
+        });
+
+        System.out.println(String.format("Creating W - DONE. Number of edges: %d", waitingEdgesForTheTerminalStations.size()));
         return waitingEdgesForTheTerminalStations;
     }
 

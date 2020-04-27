@@ -1,5 +1,7 @@
 package com.scheduling.model.graph.edge;
 
+import java.util.Objects;
+
 public class Edge {
 
     private EdgeType edgeType;
@@ -50,5 +52,20 @@ public class Edge {
 
     public void setWeight(int weight) {
         this.weight = weight;
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+        Edge edge = (Edge) o;
+        return departureNodeID == edge.departureNodeID &&
+                arrivalNodeID == edge.arrivalNodeID &&
+                edgeType == edge.edgeType;
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(edgeType, departureNodeID, arrivalNodeID);
     }
 }
