@@ -715,11 +715,11 @@ public class SchedulingService {
         try (PrintWriter writer = new PrintWriter(new File("C:\\asd\\Edges.csv"))) {
 
             StringBuilder sb = new StringBuilder();
-            sb.append("departureNodeID");
+            sb.append("Source");
             sb.append(',');
-            sb.append("arrivalNodeID");
+            sb.append("Target");
             sb.append(',');
-            sb.append("type");
+            sb.append("Type");
             sb.append('\n');
 
             edges.forEach(edge -> {
