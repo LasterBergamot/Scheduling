@@ -60,14 +60,16 @@ public class SchedulingService {
         Graph<Integer> graph = createGraphFromEdges(new ArrayList<>(A));
 
         System.out.println("\nDone with creating a proper scheduling.");
+
+        printGraphDependingOnKeyboardInput(graph);
     }
 
     /**
      * Create a Timeline for each terminal station (Vá.1 and Vá.2)
      * In these Timelines set the departure- and arrival nodes according to the departure- and arrival times and stations found inside the VehicleService
      *
-     * @param terminalStations - all of the Terminal Stations
-     * @param vehicleServices - all of the Vehicle Services
+     * @param terminalStations - all of the TerminalStations
+     * @param vehicleServices - all of the VehicleServices
      */
     private void createTimelinesForAllOfTheTerminalStations(List<TerminalStation> terminalStations, Set<VehicleService> vehicleServices) {
         System.out.println("Creating Timelines for all of the Terminal Stations.");
@@ -102,7 +104,7 @@ public class SchedulingService {
     }
 
     /**
-     * N: all departure- and arrival times (nodes) from the terminal stations
+     * N: all departure- and arrival times (Nodes) from the TerminalStations
      *
      * @return a LinkedHashSet containing all of the nodes of the network
      */
@@ -122,15 +124,9 @@ public class SchedulingService {
     }
 
     /**
-     * Ed from D: Ud is required. Edges of scheduled services.
-     * Iterate over each service, get the departure- and arrivalTime
-     * Create an edge between these
-     *
-     * After the vehicle reached the departure station, it departs to the arrival station: (N-type routes)
-     * check in which timeOfTheDay this time fits in (departureTime from VehicleService), inside routes
-     *      -> get the duration (difference between departureTime and arrivalTime from VehicleService)
-     *      this will be the weight of the edge
-     *      (this is the time required for the vehicle to reach the arrival station)
+     * Ed from D: Ud is required. Edges of scheduled VehicleServices.
+     * Iterate over each service, get the departure- and arrivalTime.
+     * Create an edge between these.
      *
      * EdgeType: SERVICE
      *
@@ -335,6 +331,8 @@ public class SchedulingService {
         long differenceInMinutes = Math.abs(Duration.between(departureTimeOfOther, arrivalTimeOfOne).toMinutes());
         for (Route route : NTypeRoutes) {
             if (isTimeInsideTimeOfTheDay(departureTimeOfOne, route.getTimeOfTheDay())) {
+
+                // The chauffeur has to wait this much time at the station
                 differenceInMinutes -= route.getTechnicalTime();
                 differenceInMinutes -= route.getCompensatoryTime();
 
@@ -343,7 +341,6 @@ public class SchedulingService {
         }
 
         boolean oneArrivedBeforeOrAtTheSameTimeAsTheOtherDeparts = arrivalTimeOfOne.isBefore(departureTimeOfOther) || arrivalTimeOfOne.equals(departureTimeOfOther);
-
         long timeToGetFromTheDepartureStationToTheArrivalStation = Duration.between(other.getDepartureTime(), other.getArrivalTime()).toMinutes();
 
         return oneArrivedBeforeOrAtTheSameTimeAsTheOtherDeparts && (differenceInMinutes < timeToGetFromTheDepartureStationToTheArrivalStation);
@@ -359,33 +356,7 @@ public class SchedulingService {
     /**
      *  Rd from D: Ud is required. Edges of unscheduled services.
      *
-     *  Create the Timeline the depot
-     *  There are a lot of services in the day
-     *  The depot is only used twice: at the start- and at the end of the day
-     *  There are two types of services:
-     *      1.: Vá.2 -> Vá.1
-     *      2.: Vá.1 -> Vá.2
-     *  So, a total of 4 edges needed
-     *  Use the menettartam from Routes
-     *
-     *  Depot + vehicle service connection:
-     *  The vehicle departs from the depot: (G-type routes)
-     *      check in which depot-interval (timeOfTheDay) this time fits in (departureTime from VehicleService), inside routes
-     *          -> get the duration (menettartam)
-     *      Subtract the duration from the departureTime -> departureTime for this depot
-     *      Duration will be the weight of the edge
-     *      (this is the time required for the vehicle to reach the departure station)
-     *      Set this departure time inside the Depot
-     *
-     *  After the vehicle reached the arrival station, it departs to the depot: (G-type routes)
-     *      check in which timeOfTheDay this time fits in (departureTime from VehicleService), inside routes
-     *          -> get technical- and compensatoryTime (the vehicle wil have to wait this much time at the station before departing to the depot)
-     *      check in which depot-interval (timeOfTheDay) this time fits in (arrivalTime from VehicleService), inside routes
-     *          -> get the duration (menettartam)
-     *      Add the duration + technical- and compensatoryTime to the arrivalTime -> arrivalTime for this depot
-     *      Duration + technical- and compensatoryTime will be the weight of the edge
-     *      (this is the time required for the vehicle to reach the depot)
-     *      Set this arrival time inside the Depot
+     *  Do as it says in the definition.
      *
      *  EdgeType: DEPOT
      *
@@ -404,7 +375,7 @@ public class SchedulingService {
             int vehicleServiceArrivalNodeID = getNodeID(vehicleService.getArrivalTime(), vehicleService.getArrivalStationID(), terminalStations, false);
 
             depotDepartingAndArrivingEdges.add(new Edge(EdgeType.DEPOT, depotDepartureNodeID, vehicleServiceDepartureNodeID));
-            depotDepartingAndArrivingEdges.add(new Edge(EdgeType.DEPOT, depotArrivalNodeID, vehicleServiceArrivalNodeID));
+            depotDepartingAndArrivingEdges.add(new Edge(EdgeType.DEPOT, vehicleServiceArrivalNodeID, depotArrivalNodeID));
         });
 
         System.out.println(String.format("Creating R - DONE. Number of edges: %d", depotDepartingAndArrivingEdges.size()));
@@ -426,7 +397,7 @@ public class SchedulingService {
         int depotDepartureNodeID = timelineFromDepot.getDepartureNodes().get(0).getId();
         int depotArrivalNodeID = timelineFromDepot.getArrivalNodes().get(0).getId();
 
-        depotCircularFlowEdges.add(new Edge(EdgeType.DEPOT, depotDepartureNodeID, depotArrivalNodeID));
+        depotCircularFlowEdges.add(new Edge(EdgeType.DEPOT,  depotArrivalNodeID, depotDepartureNodeID));
 
         System.out.println(String.format("Creating K - DONE. Number of edges: %d", depotCircularFlowEdges.size()));
         return depotCircularFlowEdges;
@@ -495,5 +466,15 @@ public class SchedulingService {
         edges.forEach(edge -> graph.addEdge(edge.getDepartureNodeID(), edge.getArrivalNodeID(), false));
 
         return graph;
+    }
+
+    private void printGraphDependingOnKeyboardInput(Graph<Integer> graph) {
+        Scanner keyboard = new Scanner(System.in);
+        System.out.println("\nWould you like to print out the whole graph? Type in 'y' or 'yes' to print.");
+        String answer = keyboard.nextLine();
+
+        if ("y".equals(answer) || "yes".equals(answer)) {
+            System.out.println("The graph:" + graph.toString());
+        }
     }
 }
