@@ -45,4 +45,14 @@ public class SchedulingConstants {
     public static final String OUTPUT_CSV_TYPE_DIRECTED = "Directed";
 
     public static final char NEW_LINE_CHARACTER = '\n';
+
+    // Used at the end of the program
+    public static final String GRAPH_PRINT_QUESTION = "\nWould you like to print out the whole graph? Type in 'y' or 'yes' to print.";
+    public static final String NODES_EDGES_CSV_EXPORT_QUESTION = "\nWould you like to export the nodes and edges as .csv files to the already defined paths: nodes: "
+            + PATH_NODES_CSV
+            + ", edges: "
+            + PATH_EDGES_CSV
+            + "? Type in 'y' or 'yes' to export.";
+    public static final String ANSWER_Y = "y";
+    public static final String ANSWER_YES = "yes";
 }

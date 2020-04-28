@@ -20,6 +20,8 @@ import java.time.LocalTime;
 import java.util.*;
 import java.util.stream.Collectors;
 
+import static com.scheduling.util.SchedulingConstants.*;
+
 public class SchedulingService {
 
     public void schedule() {
@@ -62,6 +64,8 @@ public class SchedulingService {
         System.out.println("\nDone with creating a proper scheduling.");
 
         printGraphDependingOnKeyboardInput(graph);
+
+        exportNodesAndEdgesToCSVDependingOnKeyboardInput(terminalStations, depot, new ArrayList<>(A));
     }
 
     /**
@@ -470,11 +474,22 @@ public class SchedulingService {
 
     private void printGraphDependingOnKeyboardInput(Graph<Integer> graph) {
         Scanner keyboard = new Scanner(System.in);
-        System.out.println("\nWould you like to print out the whole graph? Type in 'y' or 'yes' to print.");
+        System.out.println(GRAPH_PRINT_QUESTION);
         String answer = keyboard.nextLine();
 
-        if ("y".equals(answer) || "yes".equals(answer)) {
+        if (ANSWER_Y.equals(answer) || ANSWER_YES.equals(answer)) {
             System.out.println("The graph:" + graph.toString());
+        }
+    }
+
+    private void exportNodesAndEdgesToCSVDependingOnKeyboardInput(List<TerminalStation> terminalStations, Depot depot, List<Edge> edges) {
+        Scanner keyboard = new Scanner(System.in);
+        System.out.println(NODES_EDGES_CSV_EXPORT_QUESTION);
+        String answer = keyboard.nextLine();
+
+        if (ANSWER_Y.equals(answer) || ANSWER_YES.equals(answer)) {
+            CSVUtil.createNodesCSV(terminalStations, depot);
+            CSVUtil.createEdgesCSV(edges);
         }
     }
 }
