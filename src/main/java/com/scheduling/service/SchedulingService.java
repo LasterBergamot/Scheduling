@@ -17,10 +17,24 @@ import com.scheduling.util.CSVUtil;
 
 import java.time.Duration;
 import java.time.LocalTime;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.Comparator;
+import java.util.HashMap;
+import java.util.LinkedHashMap;
+import java.util.LinkedHashSet;
+import java.util.List;
+import java.util.Map;
+import java.util.Optional;
+import java.util.Scanner;
+import java.util.Set;
 import java.util.stream.Collectors;
 
-import static com.scheduling.util.SchedulingConstants.*;
+import static com.scheduling.util.SchedulingConstants.ANSWER_Y;
+import static com.scheduling.util.SchedulingConstants.ANSWER_YES;
+import static com.scheduling.util.SchedulingConstants.GRAPH_PRINT_QUESTION;
+import static com.scheduling.util.SchedulingConstants.NODES_EDGES_CSV_EXPORT_QUESTION;
 
 public class SchedulingService {
 
