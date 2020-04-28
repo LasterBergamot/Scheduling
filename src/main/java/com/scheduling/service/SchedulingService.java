@@ -23,7 +23,6 @@ import java.sql.Time;
 import java.text.SimpleDateFormat;
 import java.time.Duration;
 import java.time.LocalTime;
-import java.time.temporal.TemporalAmount;
 import java.util.*;
 import java.util.stream.Collectors;
 
@@ -90,8 +89,10 @@ public class SchedulingService {
 
         Graph<Integer> graph = createGraphFromEdges(new ArrayList<>(A));
 
+        createNodesCSV(terminalStations, depot);
+
         // To create a CSV from the edges: iterate over all of the edges and put the IDs and the type in these columns: Source, Target and Type
-//        writeEdgesToCSV(new ArrayList<>(A));
+//        createEdgesCSV(new ArrayList<>(A));
 
         System.out.println("\nDone with creating a proper scheduling.");
     }
@@ -710,8 +711,85 @@ public class SchedulingService {
         return graph;
     }
 
+    // Id: id of the node
+    // Label: the terminal station's name
+    // Category: node type
+    // Time: local time inside the node
+    private void createNodesCSV(List<TerminalStation> terminalStations, Depot depot) {
+        try (PrintWriter writer = new PrintWriter(new File("C:\\asd\\Nodes.csv"))) {
+
+            StringBuilder sb = new StringBuilder();
+            sb.append("Id");
+            sb.append(',');
+            sb.append("Label");
+            sb.append(',');
+            sb.append("Category");
+            sb.append(',');
+            sb.append("StationName");
+            sb.append('\n');
+
+            terminalStations.forEach(terminalStation -> {
+                Timeline timelineFromTerminalStation = terminalStation.getTimeline();
+
+                timelineFromTerminalStation.getDepartureNodes().forEach(node -> {
+                    sb.append(node.getId());
+                    sb.append(',');
+                    sb.append(node.getLocalTime());
+                    sb.append(',');
+                    sb.append(node.getNodeType().getName());
+                    sb.append(',');
+                    sb.append(terminalStation.getStationName());
+                    sb.append('\n');
+                });
+
+                timelineFromTerminalStation.getArrivalNodes().forEach(node -> {
+                    sb.append(node.getId());
+                    sb.append(',');
+                    sb.append(node.getLocalTime());
+                    sb.append(',');
+                    sb.append(node.getNodeType().getName());
+                    sb.append(',');
+                    sb.append(terminalStation.getStationName());
+                    sb.append('\n');
+                });
+
+            });
+
+            Timeline timelineFromDepot = depot.getTimeline();
+
+            timelineFromDepot.getDepartureNodes().forEach(node -> {
+                sb.append(node.getId());
+                sb.append(',');
+                sb.append(node.getLocalTime());
+                sb.append(',');
+                sb.append(node.getNodeType().getName());
+                sb.append(',');
+                sb.append("Depot");
+                sb.append('\n');
+            });
+
+            timelineFromDepot.getArrivalNodes().forEach(node -> {
+                sb.append(node.getId());
+                sb.append(',');
+                sb.append(node.getLocalTime());
+                sb.append(',');
+                sb.append(node.getNodeType().getName());
+                sb.append(',');
+                sb.append("Depot");
+                sb.append('\n');
+            });
+
+            writer.write(sb.toString());
+
+            System.out.println("done!");
+
+        } catch (FileNotFoundException e) {
+            System.out.println(e.getMessage());
+        }
+    }
+
     // Source: https://stackoverflow.com/questions/30073980/java-writing-strings-to-a-csv-file
-    private void writeEdgesToCSV(List<Edge> edges) {
+    private void createEdgesCSV(List<Edge> edges) {
         try (PrintWriter writer = new PrintWriter(new File("C:\\asd\\Edges.csv"))) {
 
             StringBuilder sb = new StringBuilder();
@@ -720,12 +798,16 @@ public class SchedulingService {
             sb.append("Target");
             sb.append(',');
             sb.append("Type");
+            sb.append(',');
+            sb.append("Category");
             sb.append('\n');
 
             edges.forEach(edge -> {
                 sb.append(edge.getDepartureNodeID());
                 sb.append(',');
                 sb.append(edge.getArrivalNodeID());
+                sb.append(',');
+                sb.append("Directed");
                 sb.append(',');
                 sb.append(edge.getEdgeType().getName());
                 sb.append('\n');
