@@ -36,4 +36,13 @@ public class Node extends ClassWithID {
     public void setLocalTime(LocalTime localTime) {
         this.localTime = localTime;
     }
+
+    @Override
+    public String toString() {
+        return "Node{" +
+                "nodeType=" + nodeType +
+                ", localTime=" + localTime +
+                ", id=" + id +
+                '}';
+    }
 }

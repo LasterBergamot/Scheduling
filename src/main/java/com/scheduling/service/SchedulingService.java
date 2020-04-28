@@ -30,10 +30,10 @@ import java.util.stream.Collectors;
 public class SchedulingService {
 
     private static final String PATH_INPUT_VSP_XLSX = "D:\\Input_VSP.xlsx";
-//    private static final String PATH_PARAMETEREK_CSV = "C:\\asd\\Parameterek.csv";
-    private static final String PATH_PARAMETEREK_CSV = "D:\\Parameterek.csv";
-//    private static final String PATH_JARATOK_CSV = "C:\\asd\\Jaratok.csv";
-    private static final String PATH_JARATOK_CSV = "D:\\Jaratok.csv";
+    private static final String PATH_PARAMETEREK_CSV = "C:\\asd\\Parameterek.csv";
+//    private static final String PATH_PARAMETEREK_CSV = "D:\\Parameterek.csv";
+    private static final String PATH_JARATOK_CSV = "C:\\asd\\Jaratok.csv";
+//    private static final String PATH_JARATOK_CSV = "D:\\Jaratok.csv";
 
     private static final String ENCODING_ISO_8859_2 = "ISO-8859-2";
     private static final String CSV_DELIMITER = ",";
@@ -88,9 +88,10 @@ public class SchedulingService {
 
         Set<Edge> A = createA(E, B, R, K, W);
 
-        createGraphFromEdges(new ArrayList<>(A));
+        Graph<Integer> graph = createGraphFromEdges(new ArrayList<>(A));
 
         // To create a CSV from the edges: iterate over all of the edges and put the IDs and the type in these columns: Source, Target and Type
+//        writeEdgesToCSV(new ArrayList<>(A));
 
         System.out.println("\nDone with creating a proper scheduling.");
     }
@@ -398,6 +399,7 @@ public class SchedulingService {
 
         // Creating edges using the two phase merging strategy
         System.out.println("Starting the two phase merging strategy.");
+
         // First phase:
         Set<Edge> edgesFromTheFirstPhase = firstPhase(terminalStations, compatibleVehicleServices, new ArrayList<>(vehicleServices));
 
@@ -700,12 +702,42 @@ public class SchedulingService {
         return allOfTheEdgesInTheNetwork;
     }
 
-    private void createGraphFromEdges(List<Edge> edges) {
+    private Graph<Integer> createGraphFromEdges(List<Edge> edges) {
         Graph<Integer> graph = new Graph<>();
 
         edges.forEach(edge -> graph.addEdge(edge.getDepartureNodeID(), edge.getArrivalNodeID(), false));
 
-        System.out.println("Graph:\n" + graph.toString());
+        return graph;
+    }
+
+    // Source: https://stackoverflow.com/questions/30073980/java-writing-strings-to-a-csv-file
+    private void writeEdgesToCSV(List<Edge> edges) {
+        try (PrintWriter writer = new PrintWriter(new File("C:\\asd\\Edges.csv"))) {
+
+            StringBuilder sb = new StringBuilder();
+            sb.append("departureNodeID");
+            sb.append(',');
+            sb.append("arrivalNodeID");
+            sb.append(',');
+            sb.append("type");
+            sb.append('\n');
+
+            edges.forEach(edge -> {
+                sb.append(edge.getDepartureNodeID());
+                sb.append(',');
+                sb.append(edge.getArrivalNodeID());
+                sb.append(',');
+                sb.append(edge.getEdgeType().getName());
+                sb.append('\n');
+            });
+
+            writer.write(sb.toString());
+
+            System.out.println("done!");
+
+        } catch (FileNotFoundException e) {
+            System.out.println(e.getMessage());
+        }
     }
 
     // Source: https://gist.github.com/Munawwar/924389/adec31107f16e3938806e25c6ea2f6a15007d79b
