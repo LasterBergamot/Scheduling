@@ -368,10 +368,10 @@ public class SchedulingService {
      *
      * @param vehicleServices - all of the vehicle services in the network
      * @param routes - all of the routes found in the Parameterek sheet
-     * @return a LinkedHashMap where the key is the id of the current vehicle service and the value is the list of all compatible vehicle services
+     * @return a HashMap where the key is the id of the current vehicle service and the value is the list of all compatible vehicle services
      */
     private Map<Integer, List<Integer>> getCompatibleVehicleServices(List<VehicleService> vehicleServices, List<Route> routes) {
-        Map<Integer, List<Integer>> compatibleVehicleServices = new LinkedHashMap<>();
+        Map<Integer, List<Integer>> compatibleVehicleServices = new HashMap<>();
 
         // Starting from the first vehicle service
         // and going till the penultimate vehicle service, because of the comparison
