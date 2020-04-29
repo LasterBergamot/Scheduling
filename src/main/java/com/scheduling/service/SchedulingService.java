@@ -165,6 +165,15 @@ public class SchedulingService {
         return edgesForScheduledServices;
     }
 
+    /**
+     * Get the ID of the node according to the time and terminal station Id found inside the vehicle service.
+     *
+     * @param timeFromVehicleService - the departure- or the arrival time from the vehicle service
+     * @param terminalStationIDFromVehicleService - the departure- or the arrival terminal station's id from the vehicle service
+     * @param terminalStations - all of the terminal stations of the network
+     * @param isDeparture - boolean value indicating whether the given time and terminal station ID is related to departure or arrival
+     * @return - the ID of the node associated with the given time and terminal station ID
+     */
     private int getNodeID(LocalTime timeFromVehicleService, int terminalStationIDFromVehicleService, List<TerminalStation> terminalStations, boolean isDeparture) {
         int nodeID = 0;
 
