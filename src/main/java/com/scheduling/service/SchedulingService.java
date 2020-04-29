@@ -190,6 +190,10 @@ public class SchedulingService {
     /**
      *  Bd from D: two phase merging strategy
      *  EdgeType: OVERHEAD
+     *
+     * @param terminalStations - all of the terminal stations in the network
+     * @param vehicleServices - all of the vehicle services in the network
+     * @param routes - all of the routes found in the Parameterek sheet
      * @return a LinkedHashSet with all of the overhead edges of the graph
      */
     private Set<Edge> createB(List<TerminalStation> terminalStations, Set<VehicleService> vehicleServices, List<Route> routes) {
@@ -211,6 +215,16 @@ public class SchedulingService {
         return edgesForOverheadServices;
     }
 
+    /**
+     * The first phase of the two phase merging strategy.
+     *
+     * Creating edges between arrival nodes found on one of the terminal stations, and the first compatible nodes found on the other terminal station.
+     *
+     * @param terminalStations - all of the terminal stations of the network
+     * @param compatibleVehicleServices - all of the compatible vehicle services
+     * @param vehicleServices - all of the vehicle services
+     * @return - all of the first-match edges
+     */
     private Set<Edge> firstPhase(List<TerminalStation> terminalStations, Map<Integer, List<Integer>> compatibleVehicleServices, List<VehicleService> vehicleServices) {
         System.out.println("Starting the First Phase.");
         Set<Edge> edgesFromTheFirstPhase = new LinkedHashSet<>();
@@ -229,6 +243,7 @@ public class SchedulingService {
                 continue;
             }
 
+            // Getting the VehicleService objects according to the IDs found inside the compatibleVehicleServices list
             List<VehicleService> vehicleServicesAccordingToTheIDs = vehicleServices.stream()
                     .filter(vehicleService1 -> compatibleVehicleServiceIDsForThisVehicleService.contains(vehicleService1.getId()))
                     .collect(Collectors.toList());
@@ -243,16 +258,19 @@ public class SchedulingService {
                     ? terminalStation2.getTimeline().getDepartureNodes()
                     : terminalStation1.getTimeline().getDepartureNodes();
 
-            // Getting the node ID of the first compatible vehicle service
+            // With the local time found inside the node, the nodes's ID can be found
             LocalTime departureTimeFromTheFirstCompatibleVehicleService = vehicleServicesAccordingToTheIDs.get(0).getDepartureTime();
 
+            // Getting the node ID of the first compatible vehicle service
             Optional<Node> departureNode = departureNodesFromTerminalStation.stream()
                     .filter(node -> node.getLocalTime().equals(departureTimeFromTheFirstCompatibleVehicleService))
                     .findFirst();
 
-            int arrivalNodeID = departureNode.map(ClassWithID::getId).orElse(0);
+            if (departureNode.isPresent()) {
+                int arrivalNodeID = departureNode.map(ClassWithID::getId).get();
 
-            edgesFromTheFirstPhase.add(new Edge(EdgeType.OVERHEAD, departureNodeID, arrivalNodeID));
+                edgesFromTheFirstPhase.add(new Edge(EdgeType.OVERHEAD, departureNodeID, arrivalNodeID));
+            }
         }
 
         System.out.println(String.format("Done with the First Phase. Number of edges: %d", edgesFromTheFirstPhase.size()));
@@ -561,7 +579,7 @@ public class SchedulingService {
         String answer = keyboard.nextLine();
 
         if (ANSWER_Y.equals(answer) || ANSWER_YES.equals(answer)) {
-            System.out.println("The graph:" + graph.toString());
+            System.out.println("The graph:\n" + graph.toString());
         }
     }
 
