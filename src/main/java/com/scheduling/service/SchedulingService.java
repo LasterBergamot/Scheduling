@@ -364,6 +364,13 @@ public class SchedulingService {
         return oneArrivedBeforeOrAtTheSameTimeAsTheOtherDeparts && (differenceInMinutes < timeToGetFromTheDepartureStationToTheArrivalStation);
     }
 
+    /**
+     *Checks if the given time is between the interval found inside the TimeOfTheDay object
+     *
+     * @param time - the departure time of the first vehicle service in the comparison
+     * @param timeOfTheDay - an object containing two LocalTime objects, which contain the current time of the day from the route
+     * @return true, if the given time is between the interval, false otherwise
+     */
     private boolean isTimeInsideTimeOfTheDay(LocalTime time, TimeOfTheDay timeOfTheDay) {
         LocalTime startingTime = timeOfTheDay.getStartingTime();
         LocalTime finishTime = timeOfTheDay.getFinishTime();
@@ -374,11 +381,17 @@ public class SchedulingService {
     /**
      *  Rd from D: Ud is required. Edges of unscheduled services.
      *
-     *  Do as it says in the definition.
+     *  Get the departure- and arrival nodes from the depot's timeline.
+     *  Go through all of the vehicle services and get their departure- and arrival nodes.
+     *  Create an edge between the departure node of the depot and the departure node of the vehicle service.
+     *  Create an edge between the arrival node of the vehicle service and the arrival node of the depot.
      *
      *  EdgeType: DEPOT
      *
-     * @return a LinkedHashSet containing all of the depot departing- and arriving edges
+     * @param depot - the only depot in the network
+     * @param vehicleServices - all of the vehicle services in the network
+     * @param terminalStations - all of the terminal stations in the network
+     * @return a LinkedHashSet containing all of the depot departure- and arrival edges
      */
     private Set<Edge> createR(Depot depot, Set<VehicleService> vehicleServices, List<TerminalStation> terminalStations) {
         System.out.println("Creating R.");
@@ -402,15 +415,18 @@ public class SchedulingService {
 
     /**
      * Kd from D:
-     * For the depot: create edges between arrivalTimes and the departureTimes
+     * For the depot: create edges between arrival times and the departure times
+     *
      * EdgeType: DEPOT
      *
-     * @return a LinkedHashSet with all of the circular flow edges between depot arriving- and departing nodes
+     * @param depot - the only depot in the network
+     * @return a LinkedHashSet with all of the circular flow edges between depot arrival- and departure nodes
      */
     private Set<Edge> createK(Depot depot) {
         System.out.println("Creating K.");
         Set<Edge> depotCircularFlowEdges = new LinkedHashSet<>();
 
+        // The depot only has one departure- and one arrival node
         Timeline timelineFromDepot = depot.getTimeline();
         int depotDepartureNodeID = timelineFromDepot.getDepartureNodes().get(0).getId();
         int depotArrivalNodeID = timelineFromDepot.getArrivalNodes().get(0).getId();
@@ -422,14 +438,14 @@ public class SchedulingService {
     }
 
     /**
-     * Wd: Create waiting edges: these always follow the current station's timeline and they connect the following departure times, collecting their stream
+     * Wd: Create waiting edges: these always follow the current station's timeline and they connect the following departure times, collecting their stream.
      * Iterate over the two terminal stations
-     * Iterate over the departureTimes found inside the terminal station
-     * Get the difference between these times (check if it's the first node on the Timeline)
-     * This will be the weight of the edge
+     * Iterate over the departure times found inside the terminal station
      * Connect the times (nodes) to form an edge
+     *
      * EdgeType: WAITING
      *
+     * @param terminalStations - all of the terminal stations in the network
      * @return a LinkedHashSet containing the waiting edges for each station
      */
     private Set<Edge> createW(List<TerminalStation> terminalStations) {
@@ -478,6 +494,12 @@ public class SchedulingService {
         return allOfTheEdgesInTheNetwork;
     }
 
+    /**
+     * Create a graph by adding all of the edges to it.
+     *
+     * @param edges - all of the edges of the network
+     * @return a graph containing all of the edges of the network
+     */
     private Graph<Integer> createGraphFromEdges(List<Edge> edges) {
         Graph<Integer> graph = new Graph<>();
 
@@ -486,6 +508,11 @@ public class SchedulingService {
         return graph;
     }
 
+    /**
+     * Print the graph on the console, if the user types 'y' or 'yes'.
+     *
+     * @param graph - the graph created from the edges
+     */
     private void printGraphDependingOnKeyboardInput(Graph<Integer> graph) {
         Scanner keyboard = new Scanner(System.in);
         System.out.println(GRAPH_PRINT_QUESTION);
@@ -496,6 +523,13 @@ public class SchedulingService {
         }
     }
 
+    /**
+     * Export all the nodes and edges into .csv files, if the user types 'y' or 'yes'.
+     *
+     * @param terminalStations - all of the terminal stations, required for the nodes
+     * @param depot - the only depot, required for the nodes
+     * @param edges - all of the edges
+     */
     private void exportNodesAndEdgesToCSVDependingOnKeyboardInput(List<TerminalStation> terminalStations, Depot depot, List<Edge> edges) {
         Scanner keyboard = new Scanner(System.in);
         System.out.println(NODES_EDGES_CSV_EXPORT_QUESTION);
