@@ -57,7 +57,7 @@ public class SchedulingService {
 
         createTimelinesForAllOfTheTerminalStations(terminalStations, vehicleServices);
 
-        createTheTimelineForTheDepot(depot, terminalStations, vehicleServices, routes);
+        createTheTimelineForTheDepot(depot);
 
         Set<Node> N = createN(terminalStations);
 
@@ -111,7 +111,12 @@ public class SchedulingService {
         System.out.println("Creating Timelines for all of the Terminal Stations - DONE.");
     }
 
-    private void createTheTimelineForTheDepot(Depot depot, List<TerminalStation> terminalStations, Set<VehicleService> vehicleServices, List<Route> routes) {
+    /**
+     * Creates the timeline for the depot, which will only contain two nodes: one for departure and one for arrival.
+     *
+     * @param depot - the only depot of the network
+     */
+    private void createTheTimelineForTheDepot(Depot depot) {
         System.out.println("Creating the Timeline for the depot.");
 
         List<Node> departureNodes = Collections.singletonList(new Node(NodeType.DEPOT_DEPARTURE, LocalTime.MIN));
@@ -122,8 +127,9 @@ public class SchedulingService {
     }
 
     /**
-     * N: all departure- and arrival times (Nodes) from the TerminalStations
+     * N: all departure- and arrival times (Nodes) from the terminal stations.
      *
+     * @param terminalStations - all of the terminal stations of the network
      * @return a LinkedHashSet containing all of the nodes of the network
      */
     private Set<Node> createN(List<TerminalStation> terminalStations) {
@@ -143,11 +149,13 @@ public class SchedulingService {
 
     /**
      * Ed from D: Ud is required. Edges of scheduled VehicleServices.
-     * Iterate over each service, get the departure- and arrivalTime.
+     * Iterate over each service, get the departure- and arrival time.
      * Create an edge between these.
      *
      * EdgeType: SERVICE
      *
+     * @param vehicleServices - all of the vehicle services of the network
+     * @param terminalStations - all of the terminal stations of the network
      * @return a LinkedHashSet containing all of the edges for scheduled services
      */
     private Set<Edge> createE(Set<VehicleService> vehicleServices, List<TerminalStation> terminalStations) {
