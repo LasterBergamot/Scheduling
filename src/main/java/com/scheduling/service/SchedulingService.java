@@ -259,6 +259,17 @@ public class SchedulingService {
         return edgesFromTheFirstPhase;
     }
 
+    /**
+     * The second phase of the two phase merging strategy.
+     *
+     * In this the edges got from the first phase are reduced to the only edges
+     * which are the least departing first-match edges (vehicle services)
+     * for the currently checked vehicle service.
+     *
+     * @param edgesFromTheFirstPhase - the first-match edges found in the first phase
+     * @param terminalStations - all of the terminal stations of the network
+     * @return - all of the overhead edges of the network
+     */
     private Set<Edge> secondPhase(List<Edge> edgesFromTheFirstPhase, List<TerminalStation> terminalStations) {
         System.out.println("Starting the Second Phase.");
         Set<Edge> edgesFromTheSecondPhase = new LinkedHashSet<>();
@@ -274,6 +285,8 @@ public class SchedulingService {
             int arrivalNodeID = edge.getArrivalNodeID();
             int departureNodeID = edge.getDepartureNodeID();
 
+            // If this key already exists inside the map, get the value
+            // otherwise, create a new ArrayList
             List<Integer> departureNodeIDs = arrivalNodeWithDepartureNodes.containsKey(arrivalNodeID) ? arrivalNodeWithDepartureNodes.get(arrivalNodeID) : new ArrayList<>();
             departureNodeIDs.add(departureNodeID);
             arrivalNodeWithDepartureNodes.put(arrivalNodeID, departureNodeIDs);
@@ -288,18 +301,25 @@ public class SchedulingService {
                 .collect(Collectors.toList());
 
         arrivalNodeWithDepartureNodes.forEach((arrivalNodeID, departureNodeIDs) -> {
+
+            // If the arrival node is from the first terminal station, get the departure node from the other one
             TerminalStation terminalStation = departureNodeIDsFromTerminalStation1.contains(arrivalNodeID)? terminalStation2: terminalStation1;
 
+            // If there's only one edge pointing to the arrival node
+            // then there's no need to check for the last departing one
             if (departureNodeIDs.size() == 1) {
                 edgesFromTheSecondPhase.add(new Edge(EdgeType.OVERHEAD, departureNodeIDs.get(0), arrivalNodeID));
             } else {
-                List<Node> arrivalNodes = terminalStation.getTimeline().getArrivalNodes()
+
+                // get the sorted list of the departing nodes of the selected terminal station
+                // the last departing will be the last one in the list
+                List<Node> departingNodes = terminalStation.getTimeline().getArrivalNodes()
                         .stream()
                         .filter(node -> departureNodeIDs.contains(node.getId()))
                         .sorted(Comparator.comparing(Node::getLocalTime))
                         .collect(Collectors.toList());
 
-                Node lastDeparting = arrivalNodes.get(arrivalNodes.size() - 1);
+                Node lastDeparting = departingNodes.get(departingNodes.size() - 1);
                 edgesFromTheSecondPhase.add(new Edge(EdgeType.OVERHEAD, lastDeparting.getId(), arrivalNodeID));
             }
         });
@@ -308,14 +328,23 @@ public class SchedulingService {
         return edgesFromTheSecondPhase;
     }
 
-    // Integer: ID of VehicleService
-    // List of Integers: IDs of compatible vehicle services
+    /**
+     * Find all of the compatible vehicle services for all services in the meaning found in the literature.
+     *
+     * @param vehicleServices - all of the vehicle services in the network
+     * @param routes - all of the routes found in the Parameterek sheet
+     * @return a LinkedHashMap where the key is the id of the current vehicle service and the value is the list of all compatible vehicle services
+     */
     private Map<Integer, List<Integer>> getCompatibleVehicleServices(List<VehicleService> vehicleServices, List<Route> routes) {
-        Map<Integer, List<Integer>> compatibleVehicleServices = new HashMap<>();
+        Map<Integer, List<Integer>> compatibleVehicleServices = new LinkedHashMap<>();
 
+        // Starting from the first vehicle service
+        // and going till the penultimate vehicle service, because of the comparison
         for (int index = 0; index < vehicleServices.size() - 1; index++) {
             VehicleService vehicleService = vehicleServices.get(index);
 
+            // Starting from the vehicle service found at the current index + 1
+            // and going till the last vehicle service, because of the comparison
             List<Integer> compatibleVehicleServicesIDs = new ArrayList<>();
             for (int innerIndex = index + 1; innerIndex < vehicleServices.size(); innerIndex++) {
                 VehicleService innerVehicleService = vehicleServices.get(innerIndex);
@@ -331,12 +360,18 @@ public class SchedulingService {
         return compatibleVehicleServices;
     }
 
+    /**
+     * Check if two vehicle services are compatible or not, in the meaning found in the literature.
+     *
+     * @param one - the first vehicle service
+     * @param other - the second vehicle service
+     * @param routes - all of the routes found in the Parameterek sheet
+     * @return true, if they are compatible, false otherwise
+     */
     private boolean isCompatible(VehicleService one, VehicleService other, List<Route> routes) {
-        int arrivalStationIDOfOne = one.getArrivalStationID();
-        int departureStationIDOfOther = other.getDepartureStationID();
 
         // the timeToGetFromTheDepartureStationToTheArrivalStation would be zero
-        if (arrivalStationIDOfOne == departureStationIDOfOther) {
+        if (one.getArrivalStationID() == other.getDepartureStationID()) {
             return false;
         }
 
@@ -346,18 +381,25 @@ public class SchedulingService {
         List<Route> NTypeRoutes = routes.stream().filter(route -> route.getRouteType().equals(RouteType.N)).collect(Collectors.toList());
         LocalTime departureTimeOfOne = one.getDepartureTime();
 
+        // The difference in minutes between the arrival of the first vehicle service and the departure of the second vehicle service
+        // Math.abs() is required because of the negative numbers
         long differenceInMinutes = Math.abs(Duration.between(departureTimeOfOther, arrivalTimeOfOne).toMinutes());
         for (Route route : NTypeRoutes) {
+
+            // Check in which time of the day the departure time of the first vehicle service fits in
             if (isTimeInsideTimeOfTheDay(departureTimeOfOne, route.getTimeOfTheDay())) {
 
-                // The chauffeur has to wait this much time at the station
+                // If it's found, subtract the technical- and compensatory times from the difference
+                // The chauffeur has to wait this much time at the terminal station
                 differenceInMinutes -= route.getTechnicalTime();
                 differenceInMinutes -= route.getCompensatoryTime();
 
+                // Exit the loop, because we found our time of the day, and the required subtraction was made
                 break;
             }
         }
 
+        // The formula itself from the literature
         boolean oneArrivedBeforeOrAtTheSameTimeAsTheOtherDeparts = arrivalTimeOfOne.isBefore(departureTimeOfOther) || arrivalTimeOfOne.equals(departureTimeOfOther);
         long timeToGetFromTheDepartureStationToTheArrivalStation = Duration.between(other.getDepartureTime(), other.getArrivalTime()).toMinutes();
 
