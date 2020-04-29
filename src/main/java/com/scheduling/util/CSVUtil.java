@@ -86,13 +86,13 @@ public class CSVUtil {
         Map<String, Integer> arrivalFromTos = createArrivalFromTosMap(terminalStation1ID, terminalStation2ID, depotID);
 
         // Source: https://mkyong.com/java/how-to-read-and-parse-csv-file-in-java/
-        BufferedReader br = null;
+        BufferedReader bufferedReader = null;
         String line;
 
         try {
 
-            br = new BufferedReader(new FileReader(PATH_PARAMETEREK_CSV, Charset.forName(ENCODING_ISO_8859_2)));
-            while ((line = br.readLine()) != null) {
+            bufferedReader = new BufferedReader(new FileReader(PATH_PARAMETEREK_CSV, Charset.forName(ENCODING_ISO_8859_2)));
+            while ((line = bufferedReader.readLine()) != null) {
                 String[] routeFromCSV = line.split(CSV_DELIMITER);
 
                 routes.add(createRouteFromRouteFromCSV(departureFromTos, arrivalFromTos, routeFromCSV));
@@ -101,9 +101,9 @@ public class CSVUtil {
         } catch (IOException e) {
             e.printStackTrace();
         } finally {
-            if (br != null) {
+            if (bufferedReader != null) {
                 try {
-                    br.close();
+                    bufferedReader.close();
                 } catch (IOException e) {
                     e.printStackTrace();
                 }
@@ -189,13 +189,13 @@ public class CSVUtil {
         int terminalStation2ID = terminalStations.get(1).getId();
 
         // Source: https://mkyong.com/java/how-to-read-and-parse-csv-file-in-java/
-        BufferedReader br = null;
+        BufferedReader bufferedReader = null;
         String line;
 
         try {
 
-            br = new BufferedReader(new FileReader(PATH_JARATOK_CSV, Charset.forName(ENCODING_ISO_8859_2)));
-            while ((line = br.readLine()) != null) {
+            bufferedReader = new BufferedReader(new FileReader(PATH_JARATOK_CSV, Charset.forName(ENCODING_ISO_8859_2)));
+            while ((line = bufferedReader.readLine()) != null) {
                 String[] vehicleServiceFromCSV = line.split(CSV_DELIMITER);
 
                 String departureTimeFromCSV = vehicleServiceFromCSV[0];
@@ -212,9 +212,9 @@ public class CSVUtil {
         } catch (IOException e) {
             e.printStackTrace();
         } finally {
-            if (br != null) {
+            if (bufferedReader != null) {
                 try {
-                    br.close();
+                    bufferedReader.close();
                 } catch (IOException e) {
                     e.printStackTrace();
                 }
@@ -317,7 +317,7 @@ public class CSVUtil {
             inputStream = new FileInputStream(PATH_INPUT_VSP_XLSX);
             Workbook workbook = WorkbookFactory.create(inputStream);
 
-            for(int index=0; index < workbook.getNumberOfSheets(); index++) {
+            for(int index = 0; index < workbook.getNumberOfSheets(); index++) {
                 Sheet sheet = workbook.getSheetAt(index);
                 String sheetName = workbook.getSheetAt(index).getSheetName();
 
