@@ -15,10 +15,7 @@ public class Graph<T> {
     private Map<T, List<T>> graph = new HashMap<>();
 
     /**
-     * This function adds the edge between source to destination
-     * @param source
-     * @param destination
-     * @param bidirectional
+     * This function adds the edge between source to destination.
      */
     public void addEdge(T source, T destination, boolean bidirectional) {
         if (!graph.containsKey(source)) {
@@ -38,7 +35,6 @@ public class Graph<T> {
 
     /**
      * This function adds a new vertex to the graph
-     * @param vertex
      */
     private void addVertex(T vertex) {
         graph.put(vertex, new LinkedList<T>());
@@ -53,7 +49,6 @@ public class Graph<T> {
 
     /**
      * This function gives the count of edges
-     * @param bidirectional
      */
     public int getEdgesCount(boolean bidirectional) {
         int count = 0;
@@ -69,7 +64,6 @@ public class Graph<T> {
 
     /**
      * This function gives whether  a vertex is present or not.
-     * @param vertex
      */
     public boolean hasVertex(T vertex) {
         return graph.containsKey(vertex);
@@ -77,8 +71,6 @@ public class Graph<T> {
 
     /**
      * This function gives whether an edge is present or not.
-     * @param source
-     * @param destination
      */
     public boolean hasEdge(T source, T destination) {
         return graph.get(source).contains(destination);
@@ -86,7 +78,7 @@ public class Graph<T> {
 
     /**
      * Prints the adjacency list of each vertex.
-     * @return
+     * @return the String representation of the graph
      */
     @Override
     public String toString() {
